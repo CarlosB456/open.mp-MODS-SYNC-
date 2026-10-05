@@ -33,6 +33,42 @@ public static class ModIndexer
         ["swat"] = 285
     };
 
+    private static readonly Dictionary<string, int> WeaponBaseIds = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["bat"] = 336,
+        ["baseball"] = 336,
+        ["chilean_flag"] = 336,
+        ["colt45"] = 346,
+        ["pistol"] = 346,
+        ["silenced"] = 347,
+        ["deagle"] = 348,
+        ["desert_eagle"] = 348,
+        ["shotgun"] = 349,
+        ["chromegun"] = 349,
+        ["sawnoff"] = 350,
+        ["spas12"] = 351,
+        ["shotgspa"] = 351,
+        ["micro_uzi"] = 352,
+        ["uzi"] = 352,
+        ["mp5"] = 353,
+        ["mp5lng"] = 353,
+        ["famae_saf"] = 353,
+        ["ak47"] = 355,
+        ["m4"] = 356,
+        ["cuntgun"] = 357,
+        ["rifle"] = 357,
+        ["sniper"] = 358,
+        ["rocketla"] = 359,
+        ["rpg"] = 359,
+        ["heatseek"] = 360,
+        ["flame"] = 361,
+        ["flamethrower"] = 361,
+        ["minigun"] = 362,
+        ["grenade"] = 342,
+        ["teargas"] = 343,
+        ["molotov"] = 344
+    };
+
     private static readonly Dictionary<string, int> AdditionModelIds = new(StringComparer.OrdinalIgnoreCase)
     {
         ["swat_custom"] = 20001,
@@ -41,15 +77,26 @@ public static class ModIndexer
         ["suzuki_spresso"] = -1002
     };
 
+    private static readonly Dictionary<string, int> AdditionBaseIds = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["swat_custom"] = 285,
+        ["carabineros_gope_custom"] = 285,
+        ["chilean_flag"] = 19300,
+        ["suzuki_spresso"] = 19300
+    };
+
     public static ServerManifest BuildManifest(string serverModsDir, string serverId = "chile_police_roleplay")
     {
         var manifest = new ServerManifest
         {
             ServerId = serverId,
+            ServerName = "open.mp 1.5.9 ModSync - Chilean Edition",
             Name = "open.mp 1.5.9 ModSync - Chilean Edition",
             Version = "1.5.9",
             Author = "eLdarqO",
+            Credits = "eLdarqO",
             Description = "Fully synchronized Chilean vehicle, skin, object and expansion pack for open.mp.",
+            RequiredLauncherVersion = "0.4.0 - R1",
             Mods = []
         };
 
@@ -113,6 +160,7 @@ public static class ModIndexer
                         Path = rel,
                         SizeBytes = new FileInfo(file).Length,
                         Sha256 = ComputeSha256(file),
+                        Type = ext.TrimStart('.'),
                         InstallPath = installRel,
                         Category = catName
                     });
@@ -120,7 +168,7 @@ public static class ModIndexer
 
                 if (files.Count > 0)
                 {
-                    int? baseId = DetectBaseId(modName, typeName, files);
+                    int? baseId = DetectBaseId(modName, typeName, mode, files);
                     int? newId = mode == "additions" ? DetectNewId(modName, typeName) : null;
 
                     manifest.Mods.Add(new ManifestMod
@@ -128,11 +176,14 @@ public static class ModIndexer
                         Id = modId,
                         Name = $"{(mode == "additions" ? "Added" : "Replacement")} {Capitalize(typeName)} - {modName}",
                         Type = typeName,
+                        Category = catName,
                         Version = "1.5.9",
                         Author = "eLdarqO",
                         Description = $"Synchronized {modName} ({mode}).",
                         BaseModelId = baseId,
                         NewModelId = newId,
+                        IsAddition = mode == "additions",
+                        Required = true,
                         Mode = mode,
                         Files = files
                     });
@@ -164,6 +215,7 @@ public static class ModIndexer
                 Path = rel,
                 SizeBytes = new FileInfo(file).Length,
                 Sha256 = ComputeSha256(file),
+                Type = ext.TrimStart('.'),
                 InstallPath = $"cleo/{rel}",
                 Category = "cleo"
             });
@@ -176,9 +228,13 @@ public static class ModIndexer
                 Id = "cleo_server_sync",
                 Name = "Server CLEO Scripts & Plugins",
                 Type = "script",
+                Category = "cleo",
                 Version = "1.5.9",
                 Author = "eLdarqO",
                 Description = "Synchronized server-side CLEO and Redux scripts.",
+                IsAddition = false,
+                Required = true,
+                Mode = "replacement",
                 Files = files
             });
         }
@@ -207,6 +263,7 @@ public static class ModIndexer
                 Path = rel,
                 SizeBytes = new FileInfo(file).Length,
                 Sha256 = ComputeSha256(file),
+                Type = ext.TrimStart('.'),
                 InstallPath = $"audio/{rel}",
                 Category = "audio"
             });
@@ -219,16 +276,32 @@ public static class ModIndexer
                 Id = "audio_server_sync",
                 Name = "Server Audio",
                 Type = "audio",
+                Category = "audio",
                 Version = "1.5.9",
                 Author = "eLdarqO",
                 Description = "Synchronized audio assets.",
+                IsAddition = false,
+                Required = true,
+                Mode = "replacement",
                 Files = files
             });
         }
     }
 
-    private static int? DetectBaseId(string name, string typeName, List<ManifestFile> files)
+    private static int? DetectBaseId(string name, string typeName, string mode, List<ManifestFile> files)
     {
+        if (mode == "additions")
+        {
+            foreach (var kvp in AdditionBaseIds)
+            {
+                if (name.Contains(kvp.Key, StringComparison.OrdinalIgnoreCase))
+                {
+                    return kvp.Value;
+                }
+            }
+            return typeName == "skin" ? 285 : 19300;
+        }
+
         if (typeName == "vehicle")
         {
             foreach (var kvp in VehicleBaseIds)
@@ -265,6 +338,24 @@ public static class ModIndexer
                 }
             }
         }
+        else if (typeName == "weapon")
+        {
+            foreach (var kvp in WeaponBaseIds)
+            {
+                if (name.Contains(kvp.Key, StringComparison.OrdinalIgnoreCase))
+                {
+                    return kvp.Value;
+                }
+                foreach (var file in files)
+                {
+                    var stem = Path.GetFileNameWithoutExtension(file.Path);
+                    if (stem.Equals(kvp.Key, StringComparison.OrdinalIgnoreCase) || stem.Contains(kvp.Key, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return kvp.Value;
+                    }
+                }
+            }
+        }
         return null;
     }
 
@@ -286,6 +377,74 @@ public static class ModIndexer
         using var stream = File.OpenRead(filePath);
         var hash = sha256.ComputeHash(stream);
         return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+
+    public static Dictionary<string, string> BuildFileLookup(string serverModsDir, ServerManifest manifest)
+    {
+        var lookup = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (!Directory.Exists(serverModsDir))
+        {
+            return lookup;
+        }
+
+        var absModsDir = Path.GetFullPath(serverModsDir);
+
+        foreach (var mod in manifest.Mods)
+        {
+            foreach (var file in mod.Files)
+            {
+                string? physicalPath = null;
+
+                if (mod.Id == "cleo_server_sync")
+                {
+                    physicalPath = Path.Combine(absModsDir, "cleo", file.Path);
+                }
+                else if (mod.Id == "audio_server_sync")
+                {
+                    physicalPath = Path.Combine(absModsDir, "audio", file.Path);
+                }
+                else if (!string.IsNullOrEmpty(mod.Category))
+                {
+                    var mode = mod.IsAddition ? "additions" : "replacements";
+                    var parts = mod.Id.Split('_');
+                    if (parts.Length >= 3)
+                    {
+                        var folderName = string.Join('_', parts[2..]);
+                        var candidate = Path.Combine(absModsDir, mod.Category, mode, folderName, file.Path);
+                        if (File.Exists(candidate))
+                        {
+                            physicalPath = candidate;
+                        }
+                    }
+                }
+
+                if (physicalPath == null || !File.Exists(physicalPath))
+                {
+                    var cand1 = Path.Combine(absModsDir, mod.Id, file.Path);
+                    if (File.Exists(cand1))
+                    {
+                        physicalPath = cand1;
+                    }
+                    else
+                    {
+                        var cand2 = Path.Combine(absModsDir, file.Path);
+                        if (File.Exists(cand2)) physicalPath = cand2;
+                    }
+                }
+
+                if (physicalPath != null && File.Exists(physicalPath))
+                {
+                    var normalizedPhysical = Path.GetFullPath(physicalPath);
+                    var keyWithSubpath = $"{mod.Id}/{file.Path.Replace('\\', '/')}".ToLowerInvariant();
+                    var keyWithFileName = $"{mod.Id}/{Path.GetFileName(file.Path)}".ToLowerInvariant();
+
+                    lookup[keyWithSubpath] = normalizedPhysical;
+                    lookup.TryAdd(keyWithFileName, normalizedPhysical);
+                }
+            }
+        }
+
+        return lookup;
     }
 
     private static string Capitalize(string text) =>

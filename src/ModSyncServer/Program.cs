@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
@@ -14,6 +15,10 @@ public class Program
 {
     private const string Version = "1.5.9";
     private const string Credits = "eLdarqO";
+
+    private static readonly object SyncLock = new();
+    private static ServerManifest _currentManifest = new();
+    private static Dictionary<string, string> _fileLookup = new(StringComparer.OrdinalIgnoreCase);
 
     public static void Main(string[] args)
     {
@@ -48,10 +53,8 @@ public class Program
         Console.ResetColor();
         Console.WriteLine($"[INFO] Mod directory resolved: {resolvedModsDir}");
 
-        ServerManifest manifest = ModIndexer.BuildManifest(resolvedModsDir);
-        string manifestJson = JsonSerializer.Serialize(manifest, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(manifestCachePath, manifestJson);
-        Console.WriteLine($"[INFO] Successfully indexed {manifest.Mods.Count} mods into {manifestCachePath}");
+        RefreshState(resolvedModsDir, manifestCachePath);
+        Console.WriteLine($"[INFO] Successfully indexed {_currentManifest.Mods.Count} mods into {manifestCachePath}");
 
         if (reindexOnly)
         {
@@ -82,14 +85,32 @@ public class Program
             service = "open.mp ModSync CDN Server",
             version = Version,
             developer = Credits,
-            mods_count = manifest.Mods.Count,
+            mods_count = _currentManifest.Mods.Count,
             status = "operational"
         }));
 
+        app.MapGet("/api/status", () => Results.Ok(new
+        {
+            status = "online",
+            version = Version,
+            credits = Credits,
+            mods_count = _currentManifest.Mods.Count
+        }));
+
+        app.MapGet("/api/server-info", () => Results.Ok(new
+        {
+            server_id = _currentManifest.ServerId,
+            server_name = _currentManifest.ServerName,
+            version = Version,
+            credits = Credits,
+            mod_count = _currentManifest.Mods.Count,
+            required_launcher = _currentManifest.RequiredLauncherVersion
+        }));
+
         // Manifest endpoints
-        app.MapGet("/manifest.json", () => Results.Text(manifestJson, "application/json"));
-        app.MapGet("/manifest", () => Results.Text(manifestJson, "application/json"));
-        app.MapGet("/api/manifest", () => Results.Text(manifestJson, "application/json"));
+        app.MapGet("/manifest.json", () => Results.Text(GetManifestJson(), "application/json"));
+        app.MapGet("/manifest", () => Results.Text(GetManifestJson(), "application/json"));
+        app.MapGet("/api/manifest", () => Results.Text(GetManifestJson(), "application/json"));
 
         // Health monitoring
         app.MapGet("/api/health", () => Results.Ok(new
@@ -100,20 +121,14 @@ public class Program
             timestamp = DateTime.UtcNow
         }));
 
-        // Dynamic reload endpoint
-        app.MapGet("/api/refresh", () =>
-        {
-            manifest = ModIndexer.BuildManifest(resolvedModsDir);
-            manifestJson = JsonSerializer.Serialize(manifest, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(manifestCachePath, manifestJson);
-            Console.WriteLine($"[INFO] Manifest refreshed dynamically. Total mods: {manifest.Mods.Count}");
-            return Results.Ok(new { status = "refreshed", mods_count = manifest.Mods.Count });
-        });
+        // Dynamic reload endpoints (supporting both GET and POST)
+        app.MapGet("/api/refresh", () => HandleRefresh(resolvedModsDir, manifestCachePath));
+        app.MapPost("/api/refresh", () => HandleRefresh(resolvedModsDir, manifestCachePath));
 
         // CDN binary asset distribution endpoints
-        app.MapGet("/api/download/{modId}/{*fileName}", (string modId, string fileName) => DownloadModFile(resolvedModsDir, modId, fileName));
-        app.MapGet("/manifest.json/api/download/{modId}/{*fileName}", (string modId, string fileName) => DownloadModFile(resolvedModsDir, modId, fileName));
-        app.MapGet("/manifest/api/download/{modId}/{*fileName}", (string modId, string fileName) => DownloadModFile(resolvedModsDir, modId, fileName));
+        app.MapGet("/api/download/{modId}/{*fileName}", (string modId, string fileName) => DownloadModFile(resolvedModsDir, modId, fileName, _fileLookup));
+        app.MapGet("/manifest.json/api/download/{modId}/{*fileName}", (string modId, string fileName) => DownloadModFile(resolvedModsDir, modId, fileName, _fileLookup));
+        app.MapGet("/manifest/api/download/{modId}/{*fileName}", (string modId, string fileName) => DownloadModFile(resolvedModsDir, modId, fileName, _fileLookup));
 
         Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine($"[INFO] ModSync CDN Server active and listening on http://0.0.0.0:{port}/");
@@ -122,28 +137,127 @@ public class Program
         app.Run();
     }
 
-    public static IResult DownloadModFile(string resolvedModsDir, string modId, string fileName)
+    private static IResult HandleRefresh(string resolvedModsDir, string manifestCachePath)
     {
-        if (string.IsNullOrWhiteSpace(fileName) || fileName.Contains(".."))
+        RefreshState(resolvedModsDir, manifestCachePath);
+        Console.WriteLine($"[INFO] Manifest refreshed dynamically. Total mods: {_currentManifest.Mods.Count}");
+        return Results.Ok(new { status = "refreshed", mods_count = _currentManifest.Mods.Count, version = Version });
+    }
+
+    private static void RefreshState(string resolvedModsDir, string manifestCachePath)
+    {
+        lock (SyncLock)
+        {
+            _currentManifest = ModIndexer.BuildManifest(resolvedModsDir);
+            _fileLookup = ModIndexer.BuildFileLookup(resolvedModsDir, _currentManifest);
+            string manifestJson = JsonSerializer.Serialize(_currentManifest, new JsonSerializerOptions { WriteIndented = true });
+            try
+            {
+                File.WriteAllText(manifestCachePath, manifestJson);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[WARN] Could not persist manifest to {manifestCachePath}: {ex.Message}");
+            }
+        }
+    }
+
+    private static string GetManifestJson()
+    {
+        lock (SyncLock)
+        {
+            return JsonSerializer.Serialize(_currentManifest, new JsonSerializerOptions { WriteIndented = true });
+        }
+    }
+
+    public static IResult DownloadModFile(string resolvedModsDir, string modId, string fileName, IReadOnlyDictionary<string, string>? lookup = null)
+    {
+        if (string.IsNullOrWhiteSpace(modId) || string.IsNullOrWhiteSpace(fileName))
+        {
+            return Results.BadRequest("Mod ID and file name are required.");
+        }
+
+        if (modId.Contains("..") || fileName.Contains("..") ||
+            modId.Contains('/') || modId.Contains('\\') ||
+            fileName.Contains(':') || Path.IsPathRooted(fileName))
         {
             return Results.BadRequest("Invalid file path requested.");
         }
 
-        // Search in categorized server_mods directory
-        string candidate = FindModFile(resolvedModsDir, modId, fileName);
-        if (!string.IsNullOrEmpty(candidate) && File.Exists(candidate))
+        var cleanFileName = fileName.TrimStart('/', '\\').Replace('\\', '/');
+
+        // 1. Primary lookup using O(1) indexed cache
+        if (lookup != null)
         {
-            return Results.File(candidate, "application/octet-stream", Path.GetFileName(candidate));
+            var keyWithSubpath = $"{modId}/{cleanFileName}".ToLowerInvariant();
+            if (lookup.TryGetValue(keyWithSubpath, out var indexedPath) && File.Exists(indexedPath))
+            {
+                if (IsSafeChildPath(resolvedModsDir, indexedPath))
+                {
+                    return Results.File(indexedPath, GetContentType(indexedPath), Path.GetFileName(indexedPath));
+                }
+            }
+
+            var keyWithFileName = $"{modId}/{Path.GetFileName(cleanFileName)}".ToLowerInvariant();
+            if (lookup.TryGetValue(keyWithFileName, out var fallbackIndexedPath) && File.Exists(fallbackIndexedPath))
+            {
+                if (IsSafeChildPath(resolvedModsDir, fallbackIndexedPath))
+                {
+                    return Results.File(fallbackIndexedPath, GetContentType(fallbackIndexedPath), Path.GetFileName(fallbackIndexedPath));
+                }
+            }
         }
 
-        // Fallback search in local mod_files directory if present
-        string legacyCandidate = Path.Combine(AppContext.BaseDirectory, "mod_files", modId, fileName);
-        if (File.Exists(legacyCandidate))
+        // 2. Direct directory resolution under resolvedModsDir
+        string candidate = FindModFile(resolvedModsDir, modId, cleanFileName);
+        if (!string.IsNullOrEmpty(candidate) && File.Exists(candidate))
         {
-            return Results.File(legacyCandidate, "application/octet-stream", Path.GetFileName(legacyCandidate));
+            if (IsSafeChildPath(resolvedModsDir, candidate))
+            {
+                return Results.File(candidate, GetContentType(candidate), Path.GetFileName(candidate));
+            }
+            return Results.BadRequest("Access outside mod directory denied.");
+        }
+
+        // 3. Fallback search in local mod_files directory if present
+        string safeLegacyDir = Path.Combine(AppContext.BaseDirectory, "mod_files");
+        string legacyCandidate = Path.Combine(safeLegacyDir, modId, cleanFileName);
+        if (File.Exists(legacyCandidate) && IsSafeChildPath(safeLegacyDir, legacyCandidate))
+        {
+            return Results.File(legacyCandidate, GetContentType(legacyCandidate), Path.GetFileName(legacyCandidate));
         }
 
         return Results.NotFound($"Requested mod asset '{fileName}' for mod '{modId}' was not found.");
+    }
+
+    public static bool IsSafeChildPath(string parentDir, string childPath)
+    {
+        try
+        {
+            var fullParent = Path.GetFullPath(parentDir).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            var fullChild = Path.GetFullPath(childPath);
+            return fullChild.StartsWith(fullParent, StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public static string GetContentType(string filePath)
+    {
+        var ext = Path.GetExtension(filePath).ToLowerInvariant();
+        return ext switch
+        {
+            ".dff" or ".txd" or ".col" => "application/octet-stream",
+            ".wav" => "audio/wav",
+            ".mp3" => "audio/mpeg",
+            ".ogg" => "audio/ogg",
+            ".js" => "application/javascript",
+            ".json" => "application/json",
+            ".ini" or ".txt" or ".fxt" or ".cfg" => "text/plain",
+            _ => "application/octet-stream"
+        };
     }
 
     public static string ResolveModsDirectory(string candidate)
@@ -178,32 +292,76 @@ public class Program
 
     public static string FindModFile(string modsDir, string modId, string fileName)
     {
-        var targetFileName = Path.GetFileName(fileName);
-        if (!Directory.Exists(modsDir))
+        if (!Directory.Exists(modsDir) || string.IsNullOrWhiteSpace(fileName))
         {
             return string.Empty;
         }
 
-        var matches = Directory.GetFiles(modsDir, targetFileName, SearchOption.AllDirectories);
-        if (matches.Length == 1)
+        var cleanFileName = fileName.TrimStart('/', '\\').Replace('\\', '/');
+
+        // Deterministic matching based on mod conventions
+        if (modId.Equals("cleo_server_sync", StringComparison.OrdinalIgnoreCase))
         {
-            return matches[0];
+            var cand = Path.Combine(modsDir, "cleo", cleanFileName);
+            if (File.Exists(cand)) return Path.GetFullPath(cand);
         }
-        if (matches.Length > 1)
+        else if (modId.Equals("audio_server_sync", StringComparison.OrdinalIgnoreCase))
         {
-            var parts = modId.Split('_', StringSplitOptions.RemoveEmptyEntries);
-            foreach (var match in matches)
+            var cand = Path.Combine(modsDir, "audio", cleanFileName);
+            if (File.Exists(cand)) return Path.GetFullPath(cand);
+        }
+        else
+        {
+            var parts = modId.Split('_');
+            if (parts.Length >= 3)
             {
-                var normMatch = match.Replace('\\', '/');
-                foreach (var part in parts)
+                var cat = parts[0] switch
                 {
-                    if (part.Length > 3 && normMatch.Contains(part, StringComparison.OrdinalIgnoreCase))
+                    "vehicle" => "vehicles",
+                    "skin" => "skins",
+                    "weapon" => "weapons",
+                    "object" => "objects",
+                    _ => parts[0]
+                };
+                var mode = parts[1] == "add" ? "additions" : "replacements";
+                var sub = string.Join('_', parts[2..]);
+                var cand = Path.Combine(modsDir, cat, mode, sub, cleanFileName);
+                if (File.Exists(cand)) return Path.GetFullPath(cand);
+            }
+        }
+
+        // Direct modId folder or direct file fallback
+        var directCand = Path.Combine(modsDir, modId, cleanFileName);
+        if (File.Exists(directCand)) return Path.GetFullPath(directCand);
+
+        var fileOnlyCand = Path.Combine(modsDir, cleanFileName);
+        if (File.Exists(fileOnlyCand)) return Path.GetFullPath(fileOnlyCand);
+
+        // Safe filename search (without wildcard injection)
+        var targetFileName = Path.GetFileName(cleanFileName);
+        if (!string.IsNullOrEmpty(targetFileName) && !targetFileName.Contains('*') && !targetFileName.Contains('?'))
+        {
+            var matches = Directory.GetFiles(modsDir, targetFileName, SearchOption.AllDirectories);
+            if (matches.Length == 1)
+            {
+                return matches[0];
+            }
+            if (matches.Length > 1)
+            {
+                var parts = modId.Split('_', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var match in matches)
+                {
+                    var normMatch = match.Replace('\\', '/');
+                    foreach (var part in parts)
                     {
-                        return match;
+                        if (part.Length > 3 && !part.Equals("server", StringComparison.OrdinalIgnoreCase) && normMatch.Contains(part, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return match;
+                        }
                     }
                 }
+                return matches[0];
             }
-            return matches[0];
         }
 
         return string.Empty;

@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Mod Pack Manifest",
+  "description": "Schema for open.mp mod synchronization system manifest",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Server or mod pack name"
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the mod pack"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the mod pack"
+    },
+    "required_launcher_version": {
+      "type": "string",
+      "description": "Minimum required launcher version"
+    },
+    "mods": {
+      "type": "array",
+      "description": "List of mods included in the pack",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique mod identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name of the mod"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["skin", "vehicle", "weapon", "object", "map", "audio", "script", "texture", "plugin"],
+            "description": "Type of the mod"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version of the mod"
+          },
+          "base_model_id": {
+            "type": "integer",
+            "description": "GTA SA model ID to replace or base from"
+          },
+          "new_model_id": {
+            "type": "integer",
+            "description": "New ID for AddSimpleModel/AddCharModel (-1000 to -30000 for objects, 20001-30000 for skins)"
+          },
+          "files": {
+            "type": "array",
+            "description": "Files associated with the mod",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "description": "Relative path to the file in the CDN"
+                },
+                "sha256": {
+                  "type": "string",
+                  "description": "SHA-256 hash of the file"
+                },
+                "size_bytes": {
+                  "type": "integer",
+                  "description": "Size of the file in bytes"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type of the file (e.g., dff, txd, col, ipl, wav, js)"
+                }
+              },
+              "required": ["path", "sha256", "size_bytes", "type"]
+            }
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Whether the mod is strictly required to play"
+          },
+          "category": {
+            "type": "string",
+            "description": "Category for UI grouping"
+          },
+          "author": {
+            "type": "string",
+            "description": "Author of the mod"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the mod"
+          }
+        },
+        "required": ["id", "name", "type", "version", "files", "required", "category"]
+      }
+    }
+  },
+  "required": ["name", "version", "description", "required_launcher_version", "mods"]
+}

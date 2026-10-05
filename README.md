@@ -175,13 +175,15 @@ The ModSync CDN Server exposes the following REST endpoints on port 8080:
 | Method | Route | Description |
 | :--- | :--- | :--- |
 | `GET` | `/` | Service health status, operational metrics, and indexed mod count. |
+| `GET` | `/api/status` | Operational status, version, and mod count. |
+| `GET` | `/api/server-info` | Server metadata, launcher version requirement, and pack information. |
 | `GET` | `/manifest.json` | Full JSON manifest of all available mod assets with SHA-256 hashes. |
 | `GET` | `/api/manifest` | Canonical manifest retrieval endpoint for client launchers. |
 | `GET` | `/api/health` | Health monitoring endpoint returning timestamp and operational status. |
-| `GET` | `/api/refresh` | Dynamically re-indexes `server_mods/` without restarting the process. |
+| `GET`, `POST` | `/api/refresh` | Dynamically re-indexes `server_mods/` without restarting the process. |
 | `GET` | `/api/download/{modId}/{fileName}` | Secure chunked binary download stream for client synchronizers. |
 
-Path traversal attacks (e.g. `..` segments) are sanitized and rejected by default.
+Path traversal attacks (e.g. `..` segments, rooted paths) are sanitized and rejected by default.
 
 ---
 
@@ -219,10 +221,11 @@ Place script assets in `server_mods/cleo/`:
 
 ## 7. Compiling Pawn Scripts
 
-Pawn source files can be compiled using the bundled `qawno` compiler:
+Pawn source files can be compiled using the bundled `qawno` compiler (note that `-o` takes the base output name):
 
 ```cmd
-qawno\pawncc.exe gamemodes\modsync_gamemode.pwn -iqawno\include -ogamemodes\modsync_gamemode.amx
+qawno\pawncc.exe gamemodes\modsync_gamemode.pwn -iqawno\include -ogamemodes\modsync_gamemode
+qawno\pawncc.exe filterscripts\modsync_advanced_fs.pwn -iqawno\include -ofilterscripts\modsync_advanced_fs
 ```
 
 ---

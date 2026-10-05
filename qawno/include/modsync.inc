@@ -98,6 +98,7 @@ stock ModSync_Init(const config_path[] = "artconfig.txt") {
     
     // Register Chilean custom expansion additions
     ModSync_AddCharModel(285, 20001, "swat_custom.dff", "swat_custom.txd");
+    ModSync_AddSimpleModel(-1, 19300, -1001, "chilean_flag.dff", "chilean_flag.txd");
     ModSync_AddSimpleModel(-1, 19300, -1002, "suzuki_spresso.dff", "suzuki_spresso.txd");
 
     CallLocalFunction("OnModSyncInitialized", "i", TotalMods);

@@ -1,6 +1,6 @@
 #define FILTERSCRIPT
 #pragma dynamic 65536
-#include <a_samp>
+#include <open.mp>
 #include "modsync.inc"
 #include "modsync_net.inc"
 

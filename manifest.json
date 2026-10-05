@@ -1,19 +1,24 @@
 {
   "server_id": "chile_police_roleplay",
+  "server_name": "open.mp 1.5.9 ModSync - Chilean Edition",
   "name": "open.mp 1.5.9 ModSync - Chilean Edition",
   "version": "1.5.9",
   "author": "eLdarqO",
+  "credits": "eLdarqO",
   "description": "Fully synchronized Chilean vehicle, skin, object and expansion pack for open.mp.",
+  "required_launcher_version": "0.4.0 - R1",
   "mods": [
     {
       "id": "vehicle_rep_hyundai_accent_taxi",
       "name": "Replacement Vehicle - hyundai_accent_taxi",
       "type": "vehicle",
+      "category": "vehicles",
       "version": "1.5.9",
       "author": "eLdarqO",
       "description": "Synchronized hyundai_accent_taxi (replacements).",
       "base_model_id": 585,
       "new_model_id": null,
+      "is_addition": false,
       "required": true,
       "mode": "replacements",
       "files": [
@@ -21,6 +26,7 @@
           "path": "emperor.dff",
           "size_bytes": 8007640,
           "sha256": "6ab77dacadc2419dde318d5b30fb5c71bb613cc24c94239472b7ef404fa19419",
+          "type": "dff",
           "install_path": "modloader/openmp_chile_police_roleplay/vehicles/hyundai_accent_taxi/emperor.dff",
           "category": "vehicles"
         },
@@ -28,6 +34,7 @@
           "path": "emperor.txd",
           "size_bytes": 4864000,
           "sha256": "bb5df276189b94f090a5e1816a98f8f25eb65366592456f2179511a1c4c6f2c3",
+          "type": "txd",
           "install_path": "modloader/openmp_chile_police_roleplay/vehicles/hyundai_accent_taxi/emperor.txd",
           "category": "vehicles"
         }
@@ -37,11 +44,13 @@
       "id": "vehicle_rep_marcopolo_andimar_bus",
       "name": "Replacement Vehicle - marcopolo_andimar_bus",
       "type": "vehicle",
+      "category": "vehicles",
       "version": "1.5.9",
       "author": "eLdarqO",
       "description": "Synchronized marcopolo_andimar_bus (replacements).",
       "base_model_id": 437,
       "new_model_id": null,
+      "is_addition": false,
       "required": true,
       "mode": "replacements",
       "files": [
@@ -49,6 +58,7 @@
           "path": "coach.dff",
           "size_bytes": 26075136,
           "sha256": "412881efe4109ed0ef1c8f3cefa7325d2241a0909be5adf4b8b2d46b41e25cb8",
+          "type": "dff",
           "install_path": "modloader/openmp_chile_police_roleplay/vehicles/marcopolo_andimar_bus/coach.dff",
           "category": "vehicles"
         },
@@ -56,6 +66,7 @@
           "path": "coach.txd",
           "size_bytes": 19510804,
           "sha256": "340a66ac085b55df594094fae6412c7aac01b3c2171bfd0812046c398b3db186",
+          "type": "txd",
           "install_path": "modloader/openmp_chile_police_roleplay/vehicles/marcopolo_andimar_bus/coach.txd",
           "category": "vehicles"
         }
@@ -65,11 +76,13 @@
       "id": "vehicle_rep_suzuki_spresso",
       "name": "Replacement Vehicle - suzuki_spresso",
       "type": "vehicle",
+      "category": "vehicles",
       "version": "1.5.9",
       "author": "eLdarqO",
       "description": "Synchronized suzuki_spresso (replacements).",
       "base_model_id": 587,
       "new_model_id": null,
+      "is_addition": false,
       "required": true,
       "mode": "replacements",
       "files": [
@@ -77,6 +90,7 @@
           "path": "euros.dff",
           "size_bytes": 21367035,
           "sha256": "21eac0f0a683a7c36b17949009757a7712819e0406f211c65d1378ddd1dbbc6e",
+          "type": "dff",
           "install_path": "modloader/openmp_chile_police_roleplay/vehicles/suzuki_spresso/euros.dff",
           "category": "vehicles"
         },
@@ -84,6 +98,7 @@
           "path": "euros.txd",
           "size_bytes": 131052,
           "sha256": "bfd4e1caa4d729ec97e0b13e5a727d03ed81bc3930ef66723446fb0136279c9e",
+          "type": "txd",
           "install_path": "modloader/openmp_chile_police_roleplay/vehicles/suzuki_spresso/euros.txd",
           "category": "vehicles"
         }
@@ -93,11 +108,13 @@
       "id": "vehicle_add_suzuki_spresso",
       "name": "Added Vehicle - suzuki_spresso",
       "type": "vehicle",
+      "category": "vehicles",
       "version": "1.5.9",
       "author": "eLdarqO",
       "description": "Synchronized suzuki_spresso (additions).",
-      "base_model_id": null,
+      "base_model_id": 19300,
       "new_model_id": -1002,
+      "is_addition": true,
       "required": true,
       "mode": "additions",
       "files": [
@@ -105,6 +122,7 @@
           "path": "suzuki_spresso.dff",
           "size_bytes": 21367035,
           "sha256": "21eac0f0a683a7c36b17949009757a7712819e0406f211c65d1378ddd1dbbc6e",
+          "type": "dff",
           "install_path": "models/suzuki_spresso.dff",
           "category": "vehicles"
         },
@@ -112,6 +130,7 @@
           "path": "suzuki_spresso.txd",
           "size_bytes": 131052,
           "sha256": "bfd4e1caa4d729ec97e0b13e5a727d03ed81bc3930ef66723446fb0136279c9e",
+          "type": "txd",
           "install_path": "models/suzuki_spresso.txd",
           "category": "vehicles"
         }
@@ -121,11 +140,13 @@
       "id": "skin_rep_carabineros_army",
       "name": "Replacement Skin - carabineros_army",
       "type": "skin",
+      "category": "skins",
       "version": "1.5.9",
       "author": "eLdarqO",
       "description": "Synchronized carabineros_army (replacements).",
       "base_model_id": 287,
       "new_model_id": null,
+      "is_addition": false,
       "required": true,
       "mode": "replacements",
       "files": [
@@ -133,6 +154,7 @@
           "path": "army.dff",
           "size_bytes": 500151,
           "sha256": "1fdba896415b3ca3e37f007c7bad822a64dcd88b194fe2055ba5b06760fa336b",
+          "type": "dff",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_army/army.dff",
           "category": "skins"
         },
@@ -140,6 +162,7 @@
           "path": "army.txd",
           "size_bytes": 792764,
           "sha256": "4e354e56559b3dff4404f7e845737bc7b1e0af7950ab00770424f2ef3c1948c7",
+          "type": "txd",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_army/army.txd",
           "category": "skins"
         }
@@ -149,11 +172,13 @@
       "id": "skin_rep_carabineros_csher",
       "name": "Replacement Skin - carabineros_csher",
       "type": "skin",
+      "category": "skins",
       "version": "1.5.9",
       "author": "eLdarqO",
       "description": "Synchronized carabineros_csher (replacements).",
       "base_model_id": 283,
       "new_model_id": null,
+      "is_addition": false,
       "required": true,
       "mode": "replacements",
       "files": [
@@ -161,6 +186,7 @@
           "path": "csher.dff",
           "size_bytes": 650176,
           "sha256": "d82a8ae8504f671daf0facb1961f75bb9186d7d8312f7530aa7d0dacc444972f",
+          "type": "dff",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_csher/csher.dff",
           "category": "skins"
         },
@@ -168,6 +194,7 @@
           "path": "csher.txd",
           "size_bytes": 1923884,
           "sha256": "7cb25458f271587c670642ceb6068cd22e5a7087d394be5e2b4d0c0e3b039050",
+          "type": "txd",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_csher/csher.txd",
           "category": "skins"
         }
@@ -177,11 +204,13 @@
       "id": "skin_rep_carabineros_dsher",
       "name": "Replacement Skin - carabineros_dsher",
       "type": "skin",
+      "category": "skins",
       "version": "1.5.9",
       "author": "eLdarqO",
       "description": "Synchronized carabineros_dsher (replacements).",
       "base_model_id": 288,
       "new_model_id": null,
+      "is_addition": false,
       "required": true,
       "mode": "replacements",
       "files": [
@@ -189,6 +218,7 @@
           "path": "dsher.dff",
           "size_bytes": 109521,
           "sha256": "b71264921ac950af2ef3ad08c6455205ff9a70ec2b46aa10a513cac840079efa",
+          "type": "dff",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_dsher/dsher.dff",
           "category": "skins"
         },
@@ -196,6 +226,7 @@
           "path": "dsher.txd",
           "size_bytes": 147752,
           "sha256": "0ce2566a52b391907250d31b93d62dcc6589b8d46bce95c15ae1aadd672bb5bf",
+          "type": "txd",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_dsher/dsher.txd",
           "category": "skins"
         }
@@ -205,11 +236,13 @@
       "id": "skin_rep_carabineros_fbi",
       "name": "Replacement Skin - carabineros_fbi",
       "type": "skin",
+      "category": "skins",
       "version": "1.5.9",
       "author": "eLdarqO",
       "description": "Synchronized carabineros_fbi (replacements).",
       "base_model_id": 286,
       "new_model_id": null,
+      "is_addition": false,
       "required": true,
       "mode": "replacements",
       "files": [
@@ -217,6 +250,7 @@
           "path": "fbi.dff",
           "size_bytes": 410035,
           "sha256": "7b5716faeb4940d2e274c301e0f36ed91ceb1b0a702da4883aa3190538562b18",
+          "type": "dff",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_fbi/fbi.dff",
           "category": "skins"
         },
@@ -224,6 +258,7 @@
           "path": "fbi.txd",
           "size_bytes": 874556,
           "sha256": "00dafff46af02e7e0063393b8d0b59548374d5fd90363a868c0618bcc145450d",
+          "type": "txd",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_fbi/fbi.txd",
           "category": "skins"
         }
@@ -233,11 +268,13 @@
       "id": "skin_rep_carabineros_lapd1",
       "name": "Replacement Skin - carabineros_lapd1",
       "type": "skin",
+      "category": "skins",
       "version": "1.5.9",
       "author": "eLdarqO",
       "description": "Synchronized carabineros_lapd1 (replacements).",
       "base_model_id": 280,
       "new_model_id": null,
+      "is_addition": false,
       "required": true,
       "mode": "replacements",
       "files": [
@@ -245,6 +282,7 @@
           "path": "lapd1.dff",
           "size_bytes": 539638,
           "sha256": "8e3c5452ac08d76d4767b18cf66588713ac126fe3799c8d9f829f3d6d69399a2",
+          "type": "dff",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_lapd1/lapd1.dff",
           "category": "skins"
         },
@@ -252,6 +290,7 @@
           "path": "lapd1.txd",
           "size_bytes": 2535252,
           "sha256": "2b2ce0abf2eb4624ac33fca241525c79eb68e4b2a67a1a36b6979ca68d5bfbe5",
+          "type": "txd",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_lapd1/lapd1.txd",
           "category": "skins"
         }
@@ -261,11 +300,13 @@
       "id": "skin_rep_carabineros_lapdm1",
       "name": "Replacement Skin - carabineros_lapdm1",
       "type": "skin",
+      "category": "skins",
       "version": "1.5.9",
       "author": "eLdarqO",
       "description": "Synchronized carabineros_lapdm1 (replacements).",
       "base_model_id": 284,
       "new_model_id": null,
+      "is_addition": false,
       "required": true,
       "mode": "replacements",
       "files": [
@@ -273,6 +314,7 @@
           "path": "lapdm1.dff",
           "size_bytes": 1027263,
           "sha256": "cade683f695d96369ae2e3646d0f7ed3d1090c7829c428826ce98edb1e620264",
+          "type": "dff",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_lapdm1/lapdm1.dff",
           "category": "skins"
         },
@@ -280,6 +322,7 @@
           "path": "lapdm1.txd",
           "size_bytes": 1694268,
           "sha256": "b7b262c4ecc702ce2825d65119ee97eaadce391ff2ca0e1ad6aa4812b6859166",
+          "type": "txd",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_lapdm1/lapdm1.txd",
           "category": "skins"
         }
@@ -289,11 +332,13 @@
       "id": "skin_rep_carabineros_lvpd1",
       "name": "Replacement Skin - carabineros_lvpd1",
       "type": "skin",
+      "category": "skins",
       "version": "1.5.9",
       "author": "eLdarqO",
       "description": "Synchronized carabineros_lvpd1 (replacements).",
       "base_model_id": 282,
       "new_model_id": null,
+      "is_addition": false,
       "required": true,
       "mode": "replacements",
       "files": [
@@ -301,6 +346,7 @@
           "path": "lvpd1.dff",
           "size_bytes": 799127,
           "sha256": "261112b7608993804e740cb3a96b440504ef2569394ecfe85e1555c71313b36d",
+          "type": "dff",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_lvpd1/lvpd1.dff",
           "category": "skins"
         },
@@ -308,6 +354,7 @@
           "path": "lvpd1.txd",
           "size_bytes": 2219536,
           "sha256": "eb3e26a6091ba26bc89f0a4a9a1933c89784f333d7186fb1fbf36a235b6eefbd",
+          "type": "txd",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_lvpd1/lvpd1.txd",
           "category": "skins"
         }
@@ -317,11 +364,13 @@
       "id": "skin_rep_carabineros_sfpd1",
       "name": "Replacement Skin - carabineros_sfpd1",
       "type": "skin",
+      "category": "skins",
       "version": "1.5.9",
       "author": "eLdarqO",
       "description": "Synchronized carabineros_sfpd1 (replacements).",
       "base_model_id": 281,
       "new_model_id": null,
+      "is_addition": false,
       "required": true,
       "mode": "replacements",
       "files": [
@@ -329,6 +378,7 @@
           "path": "sfpd1.dff",
           "size_bytes": 600527,
           "sha256": "a77b3b6f59b1280bc43847385c9bd23178c1579a4cffded10b101079931f7dba",
+          "type": "dff",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_sfpd1/sfpd1.dff",
           "category": "skins"
         },
@@ -336,6 +386,7 @@
           "path": "sfpd1.txd",
           "size_bytes": 1836328,
           "sha256": "2580ebc3f7bf6f4b4a31b4c1c3a4cda7622e24eff91976e97dff6db513fbc0ef",
+          "type": "txd",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_sfpd1/sfpd1.txd",
           "category": "skins"
         }
@@ -345,11 +396,13 @@
       "id": "skin_rep_carabineros_swat",
       "name": "Replacement Skin - carabineros_swat",
       "type": "skin",
+      "category": "skins",
       "version": "1.5.9",
       "author": "eLdarqO",
       "description": "Synchronized carabineros_swat (replacements).",
       "base_model_id": 285,
       "new_model_id": null,
+      "is_addition": false,
       "required": true,
       "mode": "replacements",
       "files": [
@@ -357,6 +410,7 @@
           "path": "swat.dff",
           "size_bytes": 1456938,
           "sha256": "d087d096fd97e2d6982ceccda230d85981da58d8ecb672246c21d0ed5194c37b",
+          "type": "dff",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_swat/swat.dff",
           "category": "skins"
         },
@@ -364,6 +418,7 @@
           "path": "swat.txd",
           "size_bytes": 2842956,
           "sha256": "0cf0e0a00dccc0f34408c5227516ce2fc2e3e55905d3804595544042e70937e3",
+          "type": "txd",
           "install_path": "modloader/openmp_chile_police_roleplay/skins/carabineros_swat/swat.txd",
           "category": "skins"
         }
@@ -373,11 +428,13 @@
       "id": "skin_add_carabineros_gope_custom",
       "name": "Added Skin - carabineros_gope_custom",
       "type": "skin",
+      "category": "skins",
       "version": "1.5.9",
       "author": "eLdarqO",
       "description": "Synchronized carabineros_gope_custom (additions).",
       "base_model_id": 285,
       "new_model_id": 20001,
+      "is_addition": true,
       "required": true,
       "mode": "additions",
       "files": [
@@ -385,6 +442,7 @@
           "path": "swat_custom.dff",
           "size_bytes": 1456938,
           "sha256": "d087d096fd97e2d6982ceccda230d85981da58d8ecb672246c21d0ed5194c37b",
+          "type": "dff",
           "install_path": "models/swat_custom.dff",
           "category": "skins"
         },
@@ -392,6 +450,7 @@
           "path": "swat_custom.txd",
           "size_bytes": 2842956,
           "sha256": "0cf0e0a00dccc0f34408c5227516ce2fc2e3e55905d3804595544042e70937e3",
+          "type": "txd",
           "install_path": "models/swat_custom.txd",
           "category": "skins"
         }
@@ -401,11 +460,13 @@
       "id": "weapon_rep_chilean_flag",
       "name": "Replacement Weapon - chilean_flag",
       "type": "weapon",
+      "category": "weapons",
       "version": "1.5.9",
       "author": "eLdarqO",
       "description": "Synchronized chilean_flag (replacements).",
-      "base_model_id": null,
+      "base_model_id": 336,
       "new_model_id": null,
+      "is_addition": false,
       "required": true,
       "mode": "replacements",
       "files": [
@@ -413,6 +474,7 @@
           "path": "bat.dff",
           "size_bytes": 806714,
           "sha256": "3eb438ffb521e836fc38b3dc33235232fa63335dd0417c900ec782f74bde7108",
+          "type": "dff",
           "install_path": "modloader/openmp_chile_police_roleplay/weapons/chilean_flag/bat.dff",
           "category": "weapons"
         },
@@ -420,6 +482,7 @@
           "path": "bat.txd",
           "size_bytes": 229800,
           "sha256": "20cc99bafc15c5997bcca4fae189f387a0716fd368983d84ada32baf0fa44b00",
+          "type": "txd",
           "install_path": "modloader/openmp_chile_police_roleplay/weapons/chilean_flag/bat.txd",
           "category": "weapons"
         }
@@ -429,11 +492,13 @@
       "id": "cleo_server_sync",
       "name": "Server CLEO Scripts \u0026 Plugins",
       "type": "script",
+      "category": "cleo",
       "version": "1.5.9",
       "author": "eLdarqO",
       "description": "Synchronized server-side CLEO and Redux scripts.",
       "base_model_id": null,
       "new_model_id": null,
+      "is_addition": false,
       "required": true,
       "mode": "replacement",
       "files": [
@@ -441,6 +506,7 @@
           "path": "audio/siren.wav",
           "size_bytes": 88244,
           "sha256": "3fa20276d8a4131431490ed129d0b05fafa4e9c82d4339b5cf635512103d6615",
+          "type": "wav",
           "install_path": "cleo/audio/siren.wav",
           "category": "cleo"
         },
@@ -448,6 +514,7 @@
           "path": "config/openmp_sync.ini",
           "size_bytes": 61,
           "sha256": "be2f425819b0b2a85fa18b9376b503fc0295802bf8981969fd3fd9923f64eee0",
+          "type": "ini",
           "install_path": "cleo/config/openmp_sync.ini",
           "category": "cleo"
         },
@@ -455,6 +522,7 @@
           "path": "scripts/custom_vehicle_spawner.js",
           "size_bytes": 2363,
           "sha256": "916b7bdd892ef42ccb0f42b020f1f692b3530c0d869998ff94527660292b4e3e",
+          "type": "js",
           "install_path": "cleo/scripts/custom_vehicle_spawner.js",
           "category": "cleo"
         },
@@ -462,6 +530,7 @@
           "path": "scripts/modsync_sdk.js",
           "size_bytes": 3069,
           "sha256": "6e619c44d10b08012af3206663ff4d5f6cb5c1f5ffd5dd0ea5e99d6e360d0e64",
+          "type": "js",
           "install_path": "cleo/scripts/modsync_sdk.js",
           "category": "cleo"
         },
@@ -469,6 +538,7 @@
           "path": "scripts/sync_nitro_effects.js",
           "size_bytes": 444,
           "sha256": "0ce7a2796f2b9c88b8caa8cc80c55b6c8ef2d33e73aecf8ea2fdf6ec34ae8b45",
+          "type": "js",
           "install_path": "cleo/scripts/sync_nitro_effects.js",
           "category": "cleo"
         },
@@ -476,6 +546,7 @@
           "path": "text/openmp_chile.fxt",
           "size_bytes": 87,
           "sha256": "330ebff845468c549170db0e5b894073db7604ca795f082c622bd5931e0b3a11",
+          "type": "fxt",
           "install_path": "cleo/text/openmp_chile.fxt",
           "category": "cleo"
         }
@@ -485,11 +556,13 @@
       "id": "audio_server_sync",
       "name": "Server Audio",
       "type": "audio",
+      "category": "audio",
       "version": "1.5.9",
       "author": "eLdarqO",
       "description": "Synchronized audio assets.",
       "base_model_id": null,
       "new_model_id": null,
+      "is_addition": false,
       "required": true,
       "mode": "replacement",
       "files": [
@@ -497,6 +570,7 @@
           "path": "siren.wav",
           "size_bytes": 88244,
           "sha256": "3fa20276d8a4131431490ed129d0b05fafa4e9c82d4339b5cf635512103d6615",
+          "type": "wav",
           "install_path": "audio/siren.wav",
           "category": "audio"
         }

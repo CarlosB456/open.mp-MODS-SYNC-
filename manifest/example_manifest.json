@@ -1,0 +1,435 @@
+{
+  "server_id": "chile_police_roleplay",
+  "server_name": "open.mp Mod Sync - Edicion Especial Chile (Carabineros, PDI & FAMAE)",
+  "name": "open.mp Mod Sync - Edicion Especial Chile (Carabineros, PDI & FAMAE)",
+  "version": "0.3.8-A-R1",
+  "author": "eLdarqO",
+  "credits": "eLdarqO",
+  "description": "Servidor oficial de open.mp con sincronizacion de mods y expansion de contenido por eLdarqO.",
+  "required_launcher_version": "0.3.8-A-R1",
+  "mods": [
+    {
+      "id": "vehicle_rep_bullet",
+      "name": "Replacement Vehicle - bullet",
+      "type": "vehicle",
+      "version": "0.3.8-A-R1",
+      "base_model_id": 541,
+      "new_model_id": 0,
+      "is_addition": false,
+      "required": true,
+      "category": "Vehicles",
+      "author": "eLdarqO",
+      "description": "Replacement asset for bullet.",
+      "files": [
+        {
+          "path": "vehicles/bullet.dff",
+          "sha256": "f6c06c383b2cb79aca87cebb89ae8ed741ab5c61e50052be8cc9412461be028d",
+          "size_bytes": 251904,
+          "type": "dff"
+        },
+        {
+          "path": "vehicles/bullet.txd",
+          "sha256": "2d8c7a9cced3eb8e11854b5261e8f878f092cb09f5a6877f4f5d49fb450be184",
+          "size_bytes": 418728,
+          "type": "txd"
+        }
+      ]
+    },
+    {
+      "id": "vehicle_rep_copcarla",
+      "name": "Replacement Vehicle - copcarla",
+      "type": "vehicle",
+      "version": "0.3.8-A-R1",
+      "base_model_id": 596,
+      "new_model_id": 0,
+      "is_addition": false,
+      "required": true,
+      "category": "Vehicles",
+      "author": "eLdarqO",
+      "description": "Replacement asset for copcarla.",
+      "files": [
+        {
+          "path": "vehicles/copcarla.dff",
+          "sha256": "874b5033c8975cd07cbf8c0d55e72f4bffe6047c808cb8ce5f1aa974c89c9855",
+          "size_bytes": 268288,
+          "type": "dff"
+        },
+        {
+          "path": "vehicles/copcarla.txd",
+          "sha256": "4c672eaa2078ed7dd3c032130f25310d30bedf8a515b85f704b1b92eab433a1d",
+          "size_bytes": 623400,
+          "type": "txd"
+        }
+      ]
+    },
+    {
+      "id": "vehicle_rep_infernus",
+      "name": "Replacement Vehicle - infernus",
+      "type": "vehicle",
+      "version": "0.3.8-A-R1",
+      "base_model_id": 411,
+      "new_model_id": 0,
+      "is_addition": false,
+      "required": true,
+      "category": "Vehicles",
+      "author": "eLdarqO",
+      "description": "Replacement asset for infernus.",
+      "files": [
+        {
+          "path": "vehicles/infernus.dff",
+          "sha256": "5483c42b29715b19ba1a4dc2a0c344cf0ef5d0cef6d065f5fe99a0c93846d72f",
+          "size_bytes": 198656,
+          "type": "dff"
+        },
+        {
+          "path": "vehicles/infernus.txd",
+          "sha256": "db30a98383c6e9a01a832d5dc154f44825d645daf8e7a7ba9fd0bd13034702be",
+          "size_bytes": 414504,
+          "type": "txd"
+        }
+      ]
+    },
+    {
+      "id": "vehicle_rep_sultan",
+      "name": "Replacement Vehicle - sultan",
+      "type": "vehicle",
+      "version": "0.3.8-A-R1",
+      "base_model_id": 560,
+      "new_model_id": 0,
+      "is_addition": false,
+      "required": true,
+      "category": "Vehicles",
+      "author": "eLdarqO",
+      "description": "Replacement asset for sultan.",
+      "files": [
+        {
+          "path": "vehicles/sultan.dff",
+          "sha256": "b73c956fe335b58e00f09b97dda662de7546d27e828211db46e5e4d8e033f86e",
+          "size_bytes": 235520,
+          "type": "dff"
+        },
+        {
+          "path": "vehicles/sultan.txd",
+          "sha256": "d0c2157c9ad890d2cf976ad190a66c06cca3f7d3aa4b5ccd12fbe20dd864ae1a",
+          "size_bytes": 676776,
+          "type": "txd"
+        }
+      ]
+    },
+    {
+      "id": "vehicle_add_patrol_suv",
+      "name": "Added Vehicle - patrol_suv",
+      "type": "vehicle",
+      "version": "0.3.8-A-R1",
+      "base_model_id": 596,
+      "new_model_id": -1001,
+      "is_addition": true,
+      "required": true,
+      "category": "Vehicles",
+      "author": "eLdarqO",
+      "description": "Custom expanded asset for patrol_suv.",
+      "files": [
+        {
+          "path": "vehicles/patrol_suv.dff",
+          "sha256": "874b5033c8975cd07cbf8c0d55e72f4bffe6047c808cb8ce5f1aa974c89c9855",
+          "size_bytes": 268288,
+          "type": "dff"
+        },
+        {
+          "path": "vehicles/patrol_suv.txd",
+          "sha256": "4c672eaa2078ed7dd3c032130f25310d30bedf8a515b85f704b1b92eab433a1d",
+          "size_bytes": 623400,
+          "type": "txd"
+        }
+      ]
+    },
+    {
+      "id": "weapon_rep_desert_eagle",
+      "name": "Replacement Weapon - desert_eagle",
+      "type": "weapon",
+      "version": "0.3.8-A-R1",
+      "base_model_id": 348,
+      "new_model_id": 0,
+      "is_addition": false,
+      "required": true,
+      "category": "Weapons",
+      "author": "eLdarqO",
+      "description": "Replacement asset for desert_eagle.",
+      "files": [
+        {
+          "path": "weapons/desert_eagle.dff",
+          "sha256": "5852a92c7631220a15bc37eb12810360596a07599299f24631a21d8611d2d915",
+          "size_bytes": 16384,
+          "type": "dff"
+        },
+        {
+          "path": "weapons/desert_eagle.txd",
+          "sha256": "69134c3c630f476490b725352def8223bf07343855d456fa3a5a0cb34427e3fb",
+          "size_bytes": 86440,
+          "type": "txd"
+        }
+      ]
+    },
+    {
+      "id": "weapon_rep_m4",
+      "name": "Replacement Weapon - m4",
+      "type": "weapon",
+      "version": "0.3.8-A-R1",
+      "base_model_id": 356,
+      "new_model_id": 0,
+      "is_addition": false,
+      "required": true,
+      "category": "Weapons",
+      "author": "eLdarqO",
+      "description": "Replacement asset for m4.",
+      "files": [
+        {
+          "path": "weapons/m4.dff",
+          "sha256": "a5878460bcc4b2862605d951cab43955635187e0d050e88e2a9eee03e7724ecd",
+          "size_bytes": 38912,
+          "type": "dff"
+        },
+        {
+          "path": "weapons/m4.txd",
+          "sha256": "66a176b9761f86fb7aab91b6fcd3e9ec2a1aba521c71f17d3bef9f689ab607ab",
+          "size_bytes": 86440,
+          "type": "txd"
+        }
+      ]
+    },
+    {
+      "id": "weapon_rep_minigun",
+      "name": "Replacement Weapon - minigun",
+      "type": "weapon",
+      "version": "0.3.8-A-R1",
+      "base_model_id": 362,
+      "new_model_id": 0,
+      "is_addition": false,
+      "required": true,
+      "category": "Weapons",
+      "author": "eLdarqO",
+      "description": "Replacement asset for minigun.",
+      "files": [
+        {
+          "path": "weapons/minigun.dff",
+          "sha256": "a3dd8bc6d9db54141871c61b1ba83c157095b82c91fcfa90f3c5c38a3d3f3495",
+          "size_bytes": 88064,
+          "type": "dff"
+        },
+        {
+          "path": "weapons/minigun.txd",
+          "sha256": "108d8aaae97e6b19f52531dd9cb69a01293359737a33cfbc1c6abdc0a33655e7",
+          "size_bytes": 90664,
+          "type": "txd"
+        }
+      ]
+    },
+    {
+      "id": "weapon_rep_sniper",
+      "name": "Replacement Weapon - sniper",
+      "type": "weapon",
+      "version": "0.3.8-A-R1",
+      "base_model_id": 358,
+      "new_model_id": 0,
+      "is_addition": false,
+      "required": true,
+      "category": "Weapons",
+      "author": "eLdarqO",
+      "description": "Replacement asset for sniper.",
+      "files": [
+        {
+          "path": "weapons/sniper.dff",
+          "sha256": "3464ce7d438cd0ca09a76bdfab28e5ca3de76ba08e70a7fcdbbfd0dfad4215de",
+          "size_bytes": 30720,
+          "type": "dff"
+        },
+        {
+          "path": "weapons/sniper.txd",
+          "sha256": "260b209dccf5b63e09168d964374ac9bbe6a0d9b872b120e23707aae09916ed1",
+          "size_bytes": 152104,
+          "type": "txd"
+        }
+      ]
+    },
+    {
+      "id": "weapon_add_famae_saf",
+      "name": "Added Weapon - famae_saf",
+      "type": "weapon",
+      "version": "0.3.8-A-R1",
+      "base_model_id": 353,
+      "new_model_id": -1002,
+      "is_addition": true,
+      "required": true,
+      "category": "Weapons",
+      "author": "eLdarqO",
+      "description": "Custom expanded asset for famae_saf.",
+      "files": [
+        {
+          "path": "weapons/famae_saf.dff",
+          "sha256": "a5878460bcc4b2862605d951cab43955635187e0d050e88e2a9eee03e7724ecd",
+          "size_bytes": 38912,
+          "type": "dff"
+        },
+        {
+          "path": "weapons/famae_saf.txd",
+          "sha256": "66a176b9761f86fb7aab91b6fcd3e9ec2a1aba521c71f17d3bef9f689ab607ab",
+          "size_bytes": 86440,
+          "type": "txd"
+        }
+      ]
+    },
+    {
+      "id": "skin_rep_swat",
+      "name": "Replacement Skin - swat",
+      "type": "skin",
+      "version": "0.3.8-A-R1",
+      "base_model_id": 285,
+      "new_model_id": 0,
+      "is_addition": false,
+      "required": true,
+      "category": "Skins",
+      "author": "eLdarqO",
+      "description": "Replacement asset for swat.",
+      "files": [
+        {
+          "path": "skins/swat.dff",
+          "sha256": "edd711968c108d887788a0ab51d511a6f54efe0fb7cbd49f398df0bc8b7e9e3a",
+          "size_bytes": 80606,
+          "type": "dff"
+        },
+        {
+          "path": "skins/swat.txd",
+          "sha256": "9ad6e405a0a12725556bf6f38d432b75cf8857aad1c6040fd18192c149ed43c1",
+          "size_bytes": 131240,
+          "type": "txd"
+        }
+      ]
+    },
+    {
+      "id": "skin_add_swat1",
+      "name": "Added Skin - swat1",
+      "type": "skin",
+      "version": "0.3.8-A-R1",
+      "base_model_id": 285,
+      "new_model_id": 20001,
+      "is_addition": true,
+      "required": true,
+      "category": "Skins",
+      "author": "eLdarqO",
+      "description": "Custom expanded asset for swat1.",
+      "files": [
+        {
+          "path": "skins/swat1.dff",
+          "sha256": "edd711968c108d887788a0ab51d511a6f54efe0fb7cbd49f398df0bc8b7e9e3a",
+          "size_bytes": 80606,
+          "type": "dff"
+        },
+        {
+          "path": "skins/swat1.txd",
+          "sha256": "9ad6e405a0a12725556bf6f38d432b75cf8857aad1c6040fd18192c149ed43c1",
+          "size_bytes": 131240,
+          "type": "txd"
+        }
+      ]
+    },
+    {
+      "id": "object_add_roadblock",
+      "name": "Added Object - roadblock",
+      "type": "object",
+      "version": "0.3.8-A-R1",
+      "base_model_id": 1459,
+      "new_model_id": -1003,
+      "is_addition": true,
+      "required": true,
+      "category": "Objects",
+      "author": "eLdarqO",
+      "description": "Custom expanded asset for roadblock.",
+      "files": [
+        {
+          "path": "objects/roadblock.dff",
+          "sha256": "c6b0e0f31b0712a30654b0a6128864326be59a79ab87ce569a603d31002bc291",
+          "size_bytes": 10294,
+          "type": "dff"
+        },
+        {
+          "path": "objects/roadblock.txd",
+          "sha256": "d049c4be1e48226668afe90b7f55f5082fe8a31bb0ee6c6dc5130c37345a4e4e",
+          "size_bytes": 4392,
+          "type": "txd"
+        }
+      ]
+    },
+    {
+      "id": "cleo_server_sync",
+      "name": "Server CLEO Scripts & Plugins",
+      "type": "script",
+      "version": "0.3.8-A-R1",
+      "base_model_id": 0,
+      "new_model_id": 0,
+      "is_addition": true,
+      "required": true,
+      "category": "Scripts",
+      "author": "eLdarqO",
+      "description": "Universal CLEO suite (.cs bytecode, .js Redux, .cleo plugins, .fxt, .ini, .wav).",
+      "files": [
+        {
+          "path": "cleo/scripts/custom_vehicle_spawner.js",
+          "sha256": "81d67d0d8a23fc998e756ede90d7f3e6e4f2a60db5bbf4065dc90d271f9d3628",
+          "size_bytes": 2385,
+          "type": "js"
+        },
+        {
+          "path": "cleo/scripts/modsync_sdk.js",
+          "sha256": "526b17f4243029581a0834dd50690093110913304e92a8cbc4621c83f5826ef8",
+          "size_bytes": 2506,
+          "type": "js"
+        },
+        {
+          "path": "cleo/scripts/sync_nitro_effects.js",
+          "sha256": "0ce7a2796f2b9c88b8caa8cc80c55b6c8ef2d33e73aecf8ea2fdf6ec34ae8b45",
+          "size_bytes": 444,
+          "type": "js"
+        },
+        {
+          "path": "cleo/text/openmp_chile.fxt",
+          "sha256": "330ebff845468c549170db0e5b894073db7604ca795f082c622bd5931e0b3a11",
+          "size_bytes": 87,
+          "type": "fxt"
+        },
+        {
+          "path": "cleo/config/openmp_sync.ini",
+          "sha256": "be2f425819b0b2a85fa18b9376b503fc0295802bf8981969fd3fd9923f64eee0",
+          "size_bytes": 61,
+          "type": "ini"
+        },
+        {
+          "path": "cleo/audio/siren.wav",
+          "sha256": "3fa20276d8a4131431490ed129d0b05fafa4e9c82d4339b5cf635512103d6615",
+          "size_bytes": 88244,
+          "type": "wav"
+        }
+      ]
+    },
+    {
+      "id": "audio_server_sync",
+      "name": "Server Audio",
+      "type": "audio",
+      "version": "0.3.8-A-R1",
+      "base_model_id": 0,
+      "new_model_id": 0,
+      "is_addition": false,
+      "required": true,
+      "category": "Audio",
+      "author": "eLdarqO",
+      "description": "Synchronized audio assets.",
+      "files": [
+        {
+          "path": "audio/siren.wav",
+          "sha256": "3fa20276d8a4131431490ed129d0b05fafa4e9c82d4339b5cf635512103d6615",
+          "size_bytes": 88244,
+          "type": "wav"
+        }
+      ]
+    }
+  ]
+}
