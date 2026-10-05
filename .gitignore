@@ -293,6 +293,8 @@ __pycache__/
 *.pc
 /CMakeCache.txt
 *.amx
+!gamemodes/*.amx
+!filterscripts/*.amx
 *.i
 .vscode/
 /docker/conan/

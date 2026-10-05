@@ -1,0 +1,8 @@
+; open.mp Custom Artwork Configuration - Chilean Edition (eLdarqO)
+; Format:
+; AddCharModel <base_skin_id> <new_id> <dff> <txd>
+; AddSimpleModel <virtual_world> <base_obj_id> <new_id> <dff> <txd>
+
+AddCharModel 285 20001 swat_custom.dff swat_custom.txd
+AddSimpleModel -1 19300 -1001 chilean_flag.dff chilean_flag.txd
+AddSimpleModel -1 19300 -1002 suzuki_spresso.dff suzuki_spresso.txd
