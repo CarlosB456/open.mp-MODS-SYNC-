@@ -3,14 +3,15 @@
 High-performance mod synchronization and custom content infrastructure for open.mp (version 1.5.9.0) and client (0.4.0 - R1).
 
 Architect & Developer: **eLdarqO**  
-Framework: **open.mp 1.5.9.0 / .NET 10.0**  
-License: See [LICENSE.md](LICENSE.md)
+Framework: **open.mp 1.5.9.0 / .NET 10.0 / ModLoader Sandbox**  
+License: See [LICENSE.md](LICENSE.md)  
+Comprehensive Technical Guide: See [docs/SERVER_OWNER_MODDING_GUIDE.md](docs/SERVER_OWNER_MODDING_GUIDE.md)
 
 ---
 
 ## 1. Architectural Overview
 
-The ModSync server infrastructure integrates a native .NET 10 CDN server alongside the open.mp multiplayer game server. It provides automated SHA-256 indexing, categorized mod distribution, server isolation, and live synchronization for custom models, textures, CLEO scripts, and audio assets without altering client base files.
+The ModSync server infrastructure integrates a high-throughput .NET 10 CDN server alongside the open.mp multiplayer game server. It provides automated SHA-256 cryptographic indexing, categorized mod distribution, server isolation, and live synchronization for custom models, textures, CLEO scripts, and audio assets without altering client base files.
 
 ```
                               +---------------------------+
@@ -30,7 +31,7 @@ The ModSync server infrastructure integrates a native .NET 10 CDN server alongsi
    |   open.mp Server    |      |   ModSync Launcher    |      |   GTA San Andreas   |
    |   (omp-server.exe)  |      |   Client (0.4.0-R1)   |      |   Client Directory  |
    |                     |      |                       |      |                     |
-   |   Port: 7777        |      |   1. Query manifest   |      |   modloader/        |
+   |   Port: 7777 (UDP)  |      |   1. Query manifest   |      |   modloader/        |
    |   - CustomModels    |<---->|   2. Verify SHA-256   +----->|     openmp_server/  |
    |   - LegacyNetwork   |      |   3. Staging / Cache  |      |   cleo/             |
    |   - Pawn Gamemode   |      |   4. Safe Execution   |      |     servers/        |
@@ -52,28 +53,10 @@ The ModSync server infrastructure integrates a native .NET 10 CDN server alongsi
 |-- omp-server.exe              # open.mp 1.5.9.0 server executable
 |-- start_server.bat            # Dual startup script (CDN + Game Server)
 |-- components/                 # open.mp 1.5.9 runtime dynamic libraries (.dll)
-|   |-- $CAPI.dll
-|   |-- Actors.dll
-|   |-- Checkpoints.dll
-|   |-- Classes.dll
-|   |-- Console.dll
 |   |-- CustomModels.dll        # Native open.mp model expansion engine
-|   |-- Databases.dll
-|   |-- Dialogs.dll
-|   |-- GangZones.dll
-|   |-- LegacyConfig.dll
-|   |-- LegacyNetwork.dll       # Client compatibility and network layer
-|   |-- Menus.dll
-|   |-- NPCs.dll
-|   |-- Objects.dll
-|   |-- Pawn.dll
-|   |-- Pickups.dll
-|   |-- Recordings.dll
-|   |-- TextDraws.dll
-|   |-- TextLabels.dll
-|   |-- Timers.dll
-|   |-- Variables.dll
-|   `-- Vehicles.dll
+|   `-- LegacyNetwork.dll       # Client compatibility and network layer
+|-- docs/
+|   `-- SERVER_OWNER_MODDING_GUIDE.md  # Comprehensive modding and architecture guide
 |-- gamemodes/                  # Server gamemodes
 |   |-- modsync_gamemode.pwn    # Chilean Roleplay & Showcase Gamemode (Pawn source)
 |   `-- modsync_gamemode.amx    # Compiled bytecode
@@ -87,18 +70,19 @@ The ModSync server infrastructure integrates a native .NET 10 CDN server alongsi
 |       `-- modsync_net.inc     # Network event RPC headers
 |-- server_mods/                # Drop-in categorized mod repository
 |   |-- server_info.json        # Server profile and metadata
-|   |-- audio/                  # Custom sound effects and sirens (.wav, .mp3)
+|   |-- audio/                  # Custom sound effects and ambient tracks (.wav, .mp3)
 |   |-- cleo/                   # CLEO bytecode (.cs), Redux (.js), and configs (.ini)
+|   |   |-- audio/              # Sound effects triggered by CLEO scripts
+|   |   |-- config/             # INI configuration files
+|   |   |-- scripts/            # JavaScript (.js) and CLEO bytecode (.cs) scripts
+|   |   `-- text/               # Localized GXT string tables (.fxt)
 |   |-- objects/                # Object replacements and additions
-|   |-- skins/                  # Skin replacements and additions (20001+)
-|   |-- vehicles/               # Vehicle replacements and additions (-1001+)
+|   |-- skins/                  # Skin replacements and additions (IDs 20000+)
+|   |-- textures/               # Custom texture dictionaries (particle.txd, etc.)
+|   |-- vehicles/               # Vehicle replacements and additions
 |   `-- weapons/                # Weapon replacements and additions
 |-- src/
 |   `-- ModSyncServer/          # .NET 10 CDN Server source code
-|       |-- Indexer.cs          # Automated directory traversal and SHA-256 calculation
-|       |-- Models.cs           # Manifest data transfer contracts
-|       |-- Program.cs          # ASP.NET Core Kestrel HTTP endpoints
-|       `-- ModSyncServer.csproj
 `-- tests/
     `-- ModSyncServer.Tests/    # Automated unit tests for indexing and security
 ```
@@ -132,39 +116,174 @@ Alternatively, execute the CLI tool directly:
 ModSyncServer.exe --mods-dir server_mods --reindex
 ```
 
+### Live Zero-Downtime Reload
+While the server is running, trigger a live re-index of new assets without restarting:
+```cmd
+curl -X POST http://localhost:8080/api/refresh
+```
+
 ---
 
-## 4. Server Configuration
+## 4. Server Owner Capabilities & Production Examples
 
-The runtime environment is defined in `config.json`. Critical parameters:
+### A. Replacements vs Additions Architecture
 
-```json
-{
-    "name": "open.mp 1.5.9 (eLdarqO)",
-    "announce": false,
-    "artwork": {
-        "enable": true,
-        "models_path": "models",
-        "port": 7777,
-        "web_server_bind": "0.0.0.0"
-    },
-    "network": {
-        "bind": "0.0.0.0",
-        "port": 7777,
-        "allow_037_clients": true,
-        "use_omp_encryption": false
-    },
-    "pawn": {
-        "main_scripts": [
-            "modsync_gamemode 1"
-        ]
+ModSync gives server owners two powerful techniques to customize visual and functional game elements:
+
+1. **Replacements (`server_mods/<category>/replacements/<mod_name>/`)**:
+   - Replaces vanilla assets in memory dynamically using ModLoader.
+   - Preserves player's base installation on disk.
+   - Retains vehicle handling, weapon damage, and ped animations automatically.
+   - Example path: `server_mods/vehicles/replacements/hyundai_accent_taxi/emperor.dff`
+2. **Additions / Content Expansion (`server_mods/<category>/additions/<mod_name>/`)**:
+   - Adds brand-new models without replacing vanilla assets.
+   - Handled via open.mp `CustomModels.dll` and configured in `artconfig.txt`.
+   - Skin IDs use range `20000` to `30000`.
+   - Object/prop IDs use base model `19300` and negative new IDs (`-1001`, `-1002`).
+
+Example `artconfig.txt`:
+```
+; Format: AddCharModel <base_skin_id> <new_id> <dff> <txd>
+AddCharModel 285 20001 swat_custom.dff swat_custom.txd
+
+; Format: AddSimpleModel <virtual_world> <base_obj_id> <new_id> <dff> <txd>
+AddSimpleModel -1 19300 -1001 chilean_flag.dff chilean_flag.txd
+AddSimpleModel -1 19300 -1002 suzuki_spresso.dff suzuki_spresso.txd
+```
+
+---
+
+### B. Vehicles: Replacements & Streaming Memory Budget
+
+#### Directory Structure
+```
+server_mods/vehicles/replacements/hyundai_accent_taxi/
+|-- emperor.dff    # 3D vehicle mesh with chassis_dummy hierarchy
+`-- emperor.txd    # Texture dictionary
+```
+
+#### Memory Tuning for High-Poly Models
+When serving high-polygon vehicle meshes (e.g. 20 MB+ DFF models), the default 32-bit GTA SA streaming budget (128 MB) can cause models to disappear or textures to flicker.
+- ModSync client enforces a **2048 MB streaming memory ceiling** via `modsync_sdk.js` by writing `2047 MB` to memory offset `0x8A5A80`.
+- Client `gta_sa.exe` must have the Large Address Aware (LAA) 4GB patch flag enabled.
+
+---
+
+### C. Weapons: Replacements & Custom 3D Attachments
+
+#### Model Replacements
+Drop `.dff` and `.txd` pairs into `server_mods/weapons/replacements/<mod_name>/`:
+- `bat.dff` / `bat.txd`: Baseball bat (Base ID: 336)
+- `colt45.dff` / `colt45.txd`: 9mm Pistol (Base ID: 346)
+- `deagle.dff` / `deagle.txd`: Desert Eagle (Base ID: 348)
+- `shotgspa.dff` / `shotgspa.txd`: Combat Shotgun (Base ID: 351)
+- `ak47.dff` / `ak47.txd`: AK-47 Assault Rifle (Base ID: 355)
+- `m4.dff` / `m4.txd`: M4 Carbine (Base ID: 356)
+
+#### Custom 3D Weapon Additions via Attached Objects
+Because GTA SA hardcodes weapon firing anims to base IDs, brand-new weapon models can be added using `AddSimpleModel` and attached to the player's skeletal hierarchy using `SetPlayerAttachedObject`:
+
+```pawn
+// Attach custom 3D model to player's right hand (Bone 6)
+SetPlayerAttachedObject(
+    playerid,
+    0,                  // Attachment slot (0-9)
+    -1001,              // Model ID from artconfig.txt
+    6,                  // Bone index: right hand
+    0.08, 0.03, -0.02,  // Position offsets (X, Y, Z)
+    180.0, 90.0, 0.0,   // Rotation (Roll, Pitch, Yaw)
+    1.0, 1.0, 1.0,      // Scale (X, Y, Z)
+    0, 0                // Default material colors
+);
+```
+
+---
+
+### D. Custom Audio & Sirens
+
+1. Audio assets placed in `server_mods/cleo/audio/` (such as `siren.wav`) are synchronized directly to `cleo/cleo_audio/` on the client.
+2. CLEO Redux scripts trigger high-fidelity audio streams in real-time:
+
+```javascript
+/// <reference path=".config/sa.d.ts" />
+// Emergency Siren Trigger via CLEO Redux
+const KEY_SIREN = 51; // '3' key (VK_3)
+let sirenStream = null;
+
+while (true) {
+    wait(50);
+    const player = new Player(0);
+    const char = player.getChar();
+    if (char && char.isSittingInAnyCar() && Pad.IsKeyPressed(KEY_SIREN)) {
+        if (!sirenStream) {
+            sirenStream = AudioStream.Create("cleo/cleo_audio/siren.wav");
+            sirenStream.setLooping(true);
+            sirenStream.play();
+            showTextBox("Emergency Siren: ACTIVE");
+        } else {
+            sirenStream.stop();
+            sirenStream = null;
+            showTextBox("Emergency Siren: OFF");
+        }
+        while (Pad.IsKeyPressed(KEY_SIREN)) wait(100);
     }
 }
 ```
 
-- `"announce": false`: Keeps the server unlisted on master public lists for private synchronization.
-- `"web_server_bind": "0.0.0.0"`: Binds the internal artwork web server to all network interfaces.
-- `"bind": "0.0.0.0"`: Listens on all interfaces for player UDP packets.
+---
+
+### E. Universal CLEO Scripts & CLEO Redux
+
+ModSync supports both compiled `.cs` bytecode (CLEO 4/5) and modern JavaScript `.js` scripts (CLEO Redux).
+
+#### Production Examples Included in Package:
+1. **Vehicle & Weapon Spawner (`custom_vehicle_spawner.js`)**:
+   - Press `F10` (`VK_F10 = 121`) to cycle showcase vehicles and weapons.
+   - Uses `Streaming.RequestModel()` and `Streaming.LoadAllModelsNow()`.
+   - Spawns vehicles via `Car.Create()` and warps the player with `char.warpIntoCar()`.
+2. **Nitrous Visual Effects (`sync_nitro_effects.js`)**:
+   - Subscribes to server-side RPC events using `globalThis.ModSync.on("SERVER_NITRO_TRIGGER", ...)`.
+3. **Custom GXT Text Tables (`.fxt`)**:
+   - `server_mods/cleo/text/openmp_chile.fxt`: Localized text strings displayed via `showTextBox()`.
+4. **Configuration Files (`.ini`)**:
+   - `server_mods/cleo/config/openmp_sync.ini`: Script configuration without recompilation.
+
+---
+
+### F. Custom Animations & Particle Effects
+
+1. **Custom Animations (`.ifp`)**:
+   - Place custom `.ifp` packages into `server_mods/packs/<pack_name>/<name>.ifp`.
+   - ModLoader intercepts animation blocks at runtime.
+   - Pawn gamemodes trigger animations via `ApplyAnimation(playerid, "PED", "WALK_civi", 4.1, 1, 1, 1, 0, 0, 1)`.
+2. **Particle Effects (`particle.txd`)**:
+   - Place modified particle dictionaries into `server_mods/textures/particle/particle.txd`.
+   - Upgrades tire burnout smoke, nitro flames, and weapon muzzle flares.
+
+---
+
+### G. Server Owner Automation & Pawn Integration
+
+```pawn
+#include <open.mp>
+#include "modsync.inc"
+
+public OnGameModeInit() {
+    // 1. Initialize ModSync subsystem
+    ModSync_Init("artconfig.txt");
+
+    // 2. Register custom additions with open.mp CustomModels engine
+    ModSync_RegisterMods();
+    return 1;
+}
+
+public OnPlayerFinishedDownloading(playerid, virtualworld) {
+    // 3. Mark player as synchronized
+    ModSync_OnPlayerFinishedDownloading(playerid);
+    SendClientMessage(playerid, 0x00FF88AA, "[ModSync] Server assets synchronized successfully.");
+    return 1;
+}
+```
 
 ---
 
@@ -183,45 +302,13 @@ The ModSync CDN Server exposes the following REST endpoints on port 8080:
 | `GET`, `POST` | `/api/refresh` | Dynamically re-indexes `server_mods/` without restarting the process. |
 | `GET` | `/api/download/{modId}/{fileName}` | Secure chunked binary download stream for client synchronizers. |
 
-Path traversal attacks (e.g. `..` segments, rooted paths) are sanitized and rejected by default.
+Path traversal attacks (`..` segments, rooted paths, and path separators in query parameters) are strictly sanitized and rejected.
 
 ---
 
-## 6. Modding Pipeline & Conventions
+## 6. Compiling Pawn Scripts
 
-### Replacements
-Place files in `server_mods/<category>/replacements/<mod_name>/`:
-- Vehicles: `server_mods/vehicles/replacements/hyundai_accent_taxi/emperor.dff`
-- Skins: `server_mods/skins/replacements/carabineros_swat/swat.dff`
-- Weapons: `server_mods/weapons/replacements/chilean_flag/bat.dff`
-
-Replacements overwrite game assets in memory using ModLoader, leaving disk game files original.
-
-### Additions (Content Expansion)
-Place files in `server_mods/<category>/additions/<mod_name>/`:
-- Custom skins: Added with IDs in the `20001`+ range.
-- Custom objects and vehicles: Configured with negative IDs (e.g., `-1001`, `-1002`) mapped in `artconfig.txt`.
-
-Example `artconfig.txt`:
-```
-AddCharModel 285 20001 swat_custom.dff swat_custom.txd
-AddSimpleModel -1 19300 -1001 chilean_flag.dff chilean_flag.txd
-AddSimpleModel -1 19300 -1002 suzuki_spresso.dff suzuki_spresso.txd
-```
-
-### CLEO & Script Sync
-Place script assets in `server_mods/cleo/`:
-- Bytecode scripts: `cleo/scripts/*.cs`
-- Redux scripts: `cleo/scripts/*.js`, `*.ts`
-- Text libraries: `cleo/text/*.fxt`
-- Configurations: `cleo/config/*.ini`
-- Plugins: `cleo/plugins/*.cleo`
-
----
-
-## 7. Compiling Pawn Scripts
-
-Pawn source files can be compiled using the bundled `qawno` compiler (note that `-o` takes the base output name):
+Pawn source files can be compiled using the bundled `qawno` compiler:
 
 ```cmd
 qawno\pawncc.exe gamemodes\modsync_gamemode.pwn -iqawno\include -ogamemodes\modsync_gamemode
@@ -230,7 +317,7 @@ qawno\pawncc.exe filterscripts\modsync_advanced_fs.pwn -iqawno\include -ofilters
 
 ---
 
-## 8. Verification & Test Suite
+## 7. Verification & Test Suite
 
 The .NET 10 test suite covers mod indexing, path resolution, SHA-256 calculation, and route safety:
 
@@ -240,7 +327,7 @@ dotnet test tests/ModSyncServer.Tests/ModSyncServer.Tests.csproj
 
 ---
 
-## 9. Credits & Acknowledgments
+## 8. Credits & Acknowledgments
 
 - **eLdarqO**: Architecture, ModSync CDN Server, custom artwork pipeline, Chilean asset integration, and synchronization protocols.
 - **open.mp Team**: The open multiplayer project core and component infrastructure.
