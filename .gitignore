@@ -315,3 +315,4 @@ cmake_install.cmake
 *-targets.cmake
 CTestTestfile.cmake
 *Config.cmake
+*.zip
