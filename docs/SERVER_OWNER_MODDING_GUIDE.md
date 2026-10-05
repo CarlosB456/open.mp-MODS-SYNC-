@@ -13,7 +13,7 @@ The open.mp ModSync system provides an enterprise-grade pipeline for delivering,
 
 ModSync resolves this through a dual-channel architecture:
 1. **High-Performance .NET 10 CDN Server**: Provides SHA-256 cryptographic verification, manifest generation, automated directory indexing, and high-throughput binary chunk distribution over HTTP/REST on port 8080.
-2. **Client-Side Isolated Sandbox**: The ModSync launcher synchronizes assets into isolated ModLoader profiles (`modloader/openmp_<server_id>/`), mounts CLEO scripts into sandboxed runtime folders, and guarantees that vanilla game files are never altered or overwritten.
+2. **Client-Side Isolated Sandbox**: The ModSync launcher synchronizes assets into isolated ModLoader profiles (`modloader/servers/<server_id>/`), mounts CLEO scripts into sandboxed runtime folders (`cleo/servers/<server_id>/`), and guarantees that vanilla game files are never altered or overwritten.
 
 ```
 +-----------------------------------------------------------------------------+
@@ -25,20 +25,22 @@ ModSync resolves this through a dual-channel architecture:
   |  open.mp Game Server     |               |  GTA San Andreas Directory    |
   |  (omp-server.exe)        |               |                               |
   |  - Port 7777 (UDP)       |<--- Game ---->|  - gta_sa.exe (LAA 4GB)       |
-  |  - CustomModels.dll      |     Network   |  - modloader/                 |
-  |  - Pawn Gamemode         |               |    `- openmp_<server_id>/     |
-  +--------------------------+               |       |-- vehicles/           |
-               |                             |       |-- skins/              |
-     Shares Asset IDs                        |       |-- weapons/            |
-     & Event Protocol                        |       `-- objects/            |
-               |                             |  - cleo/                      |
-  +--------------------------+               |    |-- scripts/               |
-  |  ModSync CDN Server      |               |    |-- cleo_audio/            |
-  |  (ModSyncServer.exe)     |               |    `-- text/                  |
-  |  - Port 8080 (HTTP)      |<--- HTTP ---->|  ModSync Launcher (0.4.0-R1)  |
-  |  - manifest.json         |     Sync      |  - Cryptographic Verification |
-  |  - /api/download/{id}    |               |  - Staging & Session Sandbox  |
-  +--------------------------+               +-------------------------------+
+  |  - CustomModels.dll      |     Network   |  - stream.ini (2048MB budget) |
+  |  - Pawn Gamemode         |               |  - modloader/                 |
+  +--------------------------+               |    `- servers/<server_id>/    |
+               |                             |       |-- vehicles/           |
+     Shares Asset IDs                        |       |-- skins/              |
+     & Event Protocol                        |       |-- weapons/            |
+               |                             |       `-- objects/            |
+  +--------------------------+               |  - cleo/                      |
+  |  ModSync CDN Server      |               |    `- servers/<server_id>/    |
+  |  (ModSyncServer.exe)     |               |       |-- scripts/            |
+  |  - Port 8080 (HTTP)      |<--- HTTP ---->|       |-- audio/              |
+  |  - manifest.json         |     Sync      |       `-- text/               |
+  |  - /api/download/{id}    |               |  ModSync Launcher (0.4.0-R1)  |
+  +--------------------------+               |  - Cryptographic Verification |
+                                             |  - Staging & Session Sandbox  |
+                                             +-------------------------------+
 ```
 
 ---
@@ -75,11 +77,38 @@ Asset additions expand the game world beyond the original 2004 asset limits. The
 | Feature | Replacements (`replacements/`) | Additions (`additions/`) |
 | :--- | :--- | :--- |
 | Engine Hook | ModLoader memory redirection | open.mp CustomModels engine (`CustomModels.dll`) |
-| Storage Location on Client | `modloader/openmp_<server_id>/...` | `models/` staging & ModLoader cache |
+| Storage Location on Client | `modloader/servers/<server_id>/...` | `models/` staging & ModLoader cache |
 | ID Scope | Base GTA SA IDs (Vehicles 400-611, Skins 0-311, Weapons 321-372) | Skin IDs 20000+, Object/Prop IDs 19300+ / Negative IDs |
 | Original Asset Access | Overwritten in memory for this session | Original asset remains available concurrently |
-| Handling / Sound Config | Uses base vehicle/weapon parameters | Uses assigned base model parameters |
+| Handling / Sound Config | Uses base parameters or drop-in `handling.cfg` / `vehicles.ide` | Uses assigned base model parameters |
 | artconfig.txt Required | No | Yes |
+
+### Capability Matrix: What Can and Cannot Be Done in open.mp 1.5.9.0
+
+Understanding the exact engine boundaries between Replacements and Additions is essential for designing server features correctly:
+
+1. **Vehicles**:
+   - **Can you add brand-new drivable vehicles via Additions?** No. The GTA San Andreas client engine hardcodes drivable vehicle model definitions to IDs `400` through `611`. In open.mp 1.5.9.0, `CustomModels.dll` supports `AddCharModel` (skins) and `AddSimpleModel` (objects/props). If a vehicle 3D model is registered in `artconfig.txt` via `AddSimpleModel` (e.g., `-1002 suzuki_spresso.dff`), it is loaded into memory as a **3D prop / dynamic object**, not a drivable vehicle entity. It can be used for showroom displays, static dealership props, or attached to existing vehicles using `AttachObjectToVehicle()`, but players cannot enter it with the `F` key or spawn it via `CreateVehicle()`.
+   - **Correct Approach for Drivable Vehicles**: Use **Replacements** (`server_mods/vehicles/replacements/<mod_name>/`). By replacing an existing vehicle model (e.g. `emperor.dff`, `coach.dff`, `euros.dff`), the vehicle inherits full driving physics, wheel suspension, collision deformation, passenger doors, and engine audio seamlessly.
+   - **Custom Handling & Tuning**: Server owners can drop custom `handling.cfg`, `vehicles.ide`, `carcols.dat`, and `carmods.dat` directly into `server_mods/vehicles/replacements/<mod_name>/`. ModLoader intercepts and applies these configuration parameters per vehicle without modifying base game files.
+
+2. **Weapons**:
+   - **Can you add brand-new weapons with independent weapon slots and firing HUD counters?** No. The GTA SA weapon system has exactly 13 hardcoded weapon slots (0 through 12) and 46 weapon types. You cannot register a native "Weapon ID 47" with built-in ammo counters without external memory hooks.
+   - **Correct Approach for Functional Shooting Weapons**: Use **Replacements** (`server_mods/weapons/replacements/<mod_name>/`). Dropping `.dff` and `.txd` pairs for `bat`, `colt45`, `deagle`, `shotgspa`, `ak47`, or `m4` replaces the visual mesh and textures while retaining original animations, fire rates, bullet spread, and reload mechanics.
+   - **Correct Approach for Visual Weapon Additions / Expanded Armory**: Register custom 3D weapon meshes (e.g. `-1001 chilean_flag.dff`) as objects in `artconfig.txt` using `AddSimpleModel`. Attach the model to the player character using `SetPlayerAttachedObject()` (Bone 6 for right hand, Bone 1 for back holster). In Pawn, handle custom damage, fire effects, or melee strikes via `OnPlayerWeaponShot` and `OnPlayerGiveDamage`.
+
+3. **Player Skins**:
+   - **Can you add brand-new skins without replacing original ones?** Yes, 100% natively supported. open.mp `CustomModels.dll` allows adding custom ped models with IDs `20000+` via `AddCharModel(base_skin_id, new_id, dff, txd)`. These skins support all standard ped animations, clothing textures, and head tracking, and are applied in Pawn via `SetPlayerSkin(playerid, 20001)`.
+
+4. **Animations (`.ifp`)**:
+   - Custom animation packages placed in `server_mods/packs/<pack_name>/<name>.ifp` are mounted dynamically by ModLoader. Gamemodes trigger animations using the open.mp `ApplyAnimation()` API.
+
+5. **Particle Effects & Textures**:
+   - Custom `particle.txd` in `server_mods/textures/particle/particle.txd` modifies tire smoke, nitro exhaust, muzzle flashes, and water splashes. CLEO Redux scripts can also trigger programmatic visual effects in real time.
+
+6. **Custom Audio & Sirens**:
+   - **Method A (open.mp Native Streaming)**: The ModSync CDN serves `.wav` and `.mp3` files directly over HTTP. Pawn scripts trigger high-fidelity 3D spatialized audio for players using `PlayAudioStreamForPlayer()`.
+   - **Method B (CLEO Redux Local Audio)**: Low-latency script playback using `AudioStream.Create("cleo/cleo_audio/<file>.wav")` for emergency vehicle sirens and interactive UI cues.
 
 ---
 
@@ -92,15 +121,32 @@ server_mods/vehicles/
 |-- replacements/
 |   |-- hyundai_accent_taxi/
 |   |   |-- emperor.dff              # Vehicle mesh and dummy hierarchy
-|   |   `-- emperor.txd              # Texture dictionary
+|   |   |-- emperor.txd              # Texture dictionary
+|   |   |-- handling.cfg             # Custom physics parameters (optional)
+|   |   `-- vehicles.ide             # Wheel sizes and visual flags (optional)
 |   `-- marcopolo_andimar_bus/
 |       |-- coach.dff
 |       `-- coach.txd
 `-- additions/
     `-- suzuki_spresso/
-        |-- suzuki_spresso.dff       # Registered with negative ID in artconfig.txt
+        |-- suzuki_spresso.dff       # Registered with negative ID (-1002) in artconfig.txt
         `-- suzuki_spresso.txd
 ```
+
+> [!NOTE]
+> **Driveable Vehicles vs Object Additions**:  
+> In open.mp 1.5.9.0, driveable cars with engine sounds, wheel physics, and driver seating must be placed in `replacements/` (e.g. `emperor.dff` replacing ID 585, `coach.dff` replacing ID 437, or `euros.dff` replacing ID 587).  
+> Vehicle models placed in `additions/` and registered with `AddSimpleModel` (`-1002 suzuki_spresso`) exist in engine RAM as **3D objects / scene props**. They can be placed on the map via `CreateObject(-1002, ...)` for car dealership displays or attached to vehicles via `AttachObjectToVehicle()`, but cannot be driven using `CreateVehicle()`.
+
+### Custom Vehicle Handling & Configuration Drop-in
+
+ModLoader intercepts GTA SA data loaders dynamically. Server owners can drop custom configuration files directly inside any vehicle's replacement folder:
+* `handling.cfg`: Center of mass, engine acceleration, top speed, braking coefficient, drive type (FWD/RWD/AWD), and suspension dampening.
+* `vehicles.ide`: Wheel size multipliers and visual animation flags.
+* `carcols.dat`: Custom color palettes and paintjob indices.
+* `carmods.dat`: Compatible tuning components (spoilers, hoods, side skirts).
+
+ModSync indexes `.cfg`, `.dat`, and `.txt` files automatically, allowing server owners to fine-tune vehicle physics without modifying client files on disk.
 
 ### 3D Model Dummy Hierarchy Requirements
 
@@ -139,21 +185,51 @@ Vehicles can include an embedded `.col` block inside the `.dff` file or a separa
 2. **Boxes / Convexhulls**: Floor collision must be positioned precisely above the wheel radii to prevent the vehicle from clipping through road meshes.
 3. **Shadow Mesh**: Shadow mesh polygons must be planar and positioned directly under the chassis with surface normal pointing upward.
 
-### Streaming Memory Management & Large Address Aware (LAA)
+### Streaming Memory Management, `stream.ini` & Large Address Aware (LAA)
 
-Modern high-polygon vehicle models (such as 20 MB+ DFF files) can rapidly exhaust the 32-bit GTA SA memory ceiling (originally set to 128 MB streaming memory in 2004).
+Modern high-polygon vehicle models (such as 20 MB+ DFF files) can rapidly exhaust the 32-bit GTA SA streaming memory ceiling (originally limited to 128 MB in 2004).
 
-Symptoms of streaming memory exhaustion:
-- Disappearing vehicle bodies leaving only floating drivers and wheels.
-- Texture pop-in and gray terrain flashing across the screen.
-- Crash with unhandled exception `0xC0000005` at address `0x00538000+`.
+#### Symptoms of Streaming Memory Exhaustion
+* Disappearing vehicle bodies leaving only floating drivers and wheels.
+* Texture pop-in and gray terrain flashing across the screen.
+* Unhandled access violation exception `0xC0000005` at address `0x00538000+`.
 
-**Mandatory Client Tuning**:
-1. **Large Address Aware (LAA)**: The `gta_sa.exe` binary must have the LAA header flag enabled, granting 4 GB of virtual address space on 64-bit Windows.
-2. **Streaming Memory Budget**: ModSync enforces a 2048 MB memory budget (2047 MB safe ceiling) by writing to memory offset `0x8A5A80` via `modsync_sdk.js`:
+#### 1. The `stream.ini` Engine Configuration (2048 MB Budget)
+ModSync configures `stream.ini` in the GTA San Andreas root directory to allocate an expanded 2048 MB memory budget and boosted vehicle pool:
+
+```ini
+memory		2096128
+devkit_memory	2096128
+vehicles	96
+pe_lightchangerate	0.0005
+pe_lightingbasecap	0.35
+pe_lightingbasemult	0.5
+pe_leftx	16
+pe_topy		16
+pe_rightx	16
+pe_bottomy	16
+dontbuildpaths
+```
+
+#### Why `2096128 KB` Instead of `2048 MB`?
+* `2096128 KB` equals exactly `2047 MB` (`0x7FE00000` bytes).
+* GTA San Andreas' internal memory allocator performs calculations using **signed 32-bit integers**.
+* Setting exactly `2048 MB` (`2,147,483,648` bytes / `0x80000000`) causes an immediate signed integer arithmetic overflow into negative values (`-2,147,483,648`), triggering an instantaneous memory allocation fault (`0xC0000005`) on boot.
+* Specifying `2096128 KB` establishes the maximum possible safe memory ceiling without triggering signed integer overflow.
+
+#### What Does `vehicles 96` Do?
+* Expands the active vehicle streaming pool limit from the vanilla 32/48 vehicles to 96.
+* Prevents vehicle models from being aggressively purged or failing to stream when multiple players congregate with custom high-poly vehicles.
+
+#### 2. Large Address Aware (LAA 4GB Flag)
+By default, 32-bit Windows executables are restricted to 2 GB of user virtual address space. Enabling the `IMAGE_FILE_LARGE_ADDRESS_AWARE` flag (`0x0020`) in the PE header of `gta_sa.exe` expands this limit to 4 GB on 64-bit operating systems.
+The ModSync Client Launcher (`0.4.0-R1`) automatically inspects and applies the LAA flag and provisions `stream.ini` before booting the client.
+
+#### 3. Secondary CLEO Redux Runtime Guard
+As a runtime safeguard, `modsync_sdk.js` checks and enforces the streaming memory ceiling directly at memory offset `0x8A5A80`:
 
 ```javascript
-// Enforce 2048MB memory ceiling (0x8A5A80) in CLEO Redux runtime
+// Runtime memory budget safeguard in CLEO Redux
 if (typeof Memory !== 'undefined') {
     Memory.WriteU32(0x8A5A80, 2047 * 1024 * 1024);
     if (Memory.ReadU32(0x8E4CB4) >= 2047 * 1024 * 1024) {
@@ -241,15 +317,40 @@ stock RemoveCustomWeaponObject(playerid) {
 
 ## 5. Custom Audio & Siren Synchronization
 
-### Directory Structure & Distribution
+ModSync provides two distinct audio delivery pipelines depending on gameplay requirements:
 
-Audio assets are placed in two locations:
-1. `server_mods/audio/`: Global ambient tracks and UI sounds.
-2. `server_mods/cleo/audio/`: Script-triggered sounds (e.g., police sirens, megaphone calls, custom engine tones).
+### Pipeline Comparison
 
-The ModSync launcher maps files from `server_mods/cleo/audio/` directly into `cleo/cleo_audio/` on the client.
+| Audio Method | Implementation | Best Suited For | Client Requirements |
+| :--- | :--- | :--- | :--- |
+| **open.mp Native Streaming** | `PlayAudioStreamForPlayer()` | 3D environmental sound, sirens, boomboxes, vehicle radios | Pure vanilla or ModSync client |
+| **CLEO Redux Local Streams** | `AudioStream.Create()` | Instant zero-latency UI cues, driver siren toggles | CLEO Redux runtime |
 
-### CLEO Redux Siren Script Implementation
+### 1. open.mp Native HTTP Audio Streaming (Pawn)
+The ModSync CDN Server hosts audio files directly over HTTP (`/api/download/audio_server_sync/<filename>`). Server owners can trigger synchronized 3D spatialized audio anywhere in the game world:
+
+```pawn
+// Trigger 3D directional police siren at coordinates
+stock PlayServerSiren(playerid, Float:x, Float:y, Float:z, Float:radius = 50.0) {
+    // Stream directly from ModSync CDN Server
+    PlayAudioStreamForPlayer(
+        playerid,
+        "http://127.0.0.1:8080/api/download/audio_server_sync/siren.wav",
+        x, y, z,
+        radius,
+        1 // Enable 3D positional audio
+    );
+    return 1;
+}
+
+stock StopServerSiren(playerid) {
+    StopAudioStreamForPlayer(playerid);
+    return 1;
+}
+```
+
+### 2. CLEO Redux Siren Script Implementation
+Audio assets placed in `server_mods/cleo/audio/` (such as `siren.wav`) are synchronized directly to `cleo/servers/<server_id>/audio/` (and staged to `cleo/cleo_audio/` on the client).
 
 The following complete CLEO Redux JavaScript script (`server_mods/cleo/scripts/sync_sirens.js`) demonstrates loading, looping, and controlling a custom police siren stream with keyboard input:
 
@@ -576,12 +677,14 @@ public OnPlayerFinishedDownloading(playerid, virtualworld) {
 
 | Symptom | Probable Cause | Corrective Action |
 | :--- | :--- | :--- |
-| Vehicles render invisible or flickering | Streaming memory buffer depleted by high-poly models | Ensure `modsync_sdk.js` writes `2047MB` to `0x8A5A80` and verify client executable has the 4GB Large Address Aware (LAA) flag enabled. |
+| Vehicles render invisible or flickering | Streaming memory buffer depleted by high-poly models | Ensure `stream.ini` specifies `memory 2096128` (2047MB) and `vehicles 96`. Verify client `gta_sa.exe` has the Large Address Aware (LAA 4GB) flag enabled. |
 | Model has white/missing textures | Texture names in `.txd` do not match internal `.dff` material names | Open `.dff` in RW Analyze or 3ds Max, check material texture name string, and rename matching raster in `.txd`. |
 | Custom addition model ID does not spawn | Incorrect ID range or base model assignment | Skins must use IDs `20000+` and base ID `0-311`. Objects must use base ID `19300` and negative new IDs (`-1001`, `-1002`). |
+| Custom vehicle addition cannot be entered with F key | Vehicle model registered as an object addition | In open.mp 1.5.9.0, `AddSimpleModel` creates 3D object entities, not drivable cars. Move drivable vehicle mods to `server_mods/vehicles/replacements/<mod_name>/` (e.g. `emperor.dff`, `coach.dff`). |
+| Custom weapon addition does not shoot or show ammo | Weapon registered as object addition without attachment | GTA SA hardcodes 13 weapon slots. For native shooting weapons, use `server_mods/weapons/replacements/`. For 3D additions, attach via `SetPlayerAttachedObject()` and script damage in Pawn. |
 | CLEO Redux script does not run | Missing TypeScript/JavaScript definitions or runtime syntax error | Check `cleo_redux.log` in GTA root. Verify script starts with coroutine loop (`while (true) { wait(...); }`). |
 | Client cannot download assets from CDN | HTTP port 8080 blocked by firewall or router NAT | Allow TCP port 8080 inbound in Windows Firewall. Verify CDN responds via `curl http://localhost:8080/api/health`. |
-| Downloaded mods remain after leaving server | Player used non-ModSync launcher | Launch only via ModSync Launcher (`0.4.0-R1`), which automatically isolates files into `modloader/openmp_<server_id>/` and cleans up on exit. |
+| Downloaded mods remain after leaving server | Player used non-ModSync launcher | Launch only via ModSync Launcher (`0.4.0-R1`), which automatically isolates files into `modloader/servers/<server_id>/` and `cleo/servers/<server_id>/`, and cleans up on exit. |
 
 ---
 

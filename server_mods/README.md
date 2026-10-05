@@ -41,10 +41,10 @@ server_mods/
 
 ## 2. Replacements vs Additions
 
-* **`replacements/`**: Overwrites visual models and textures in memory using ModLoader. Leaves the player's physical GTA installation intact. Retains native handling, sounds, and animations.
+* **`replacements/`**: Overwrites visual models and textures in memory using ModLoader without altering client base game files. Drivable vehicles and functional shooting weapons must be placed here.
 * **`additions/`**: Expands the game world with brand-new IDs registered through open.mp `CustomModels.dll` via `artconfig.txt`.
   - Skins: IDs `20000+` (base ID `0-311`)
-  - Objects / Props / Weapons: Negative IDs (`-1001`, `-1002`) with base object ID `19300`
+  - Objects / Props / Weapon Attachments: Negative IDs (`-1001`, `-1002`) with base object ID `19300`. (Note: Vehicle models in additions register as 3D object props, not drivable cars).
 
 ---
 
@@ -54,9 +54,9 @@ server_mods/
 * **CLEO Redux**: Place `.js` scripts in `cleo/scripts/`.
 * **Text Tables**: Place `.fxt` files in `cleo/text/`.
 * **Configurations**: Place `.ini` files in `cleo/config/`.
-* **Audio FX**: Place `.wav` or `.mp3` files in `cleo/audio/` (staged into `cleo/cleo_audio/` on the client).
+* **Audio FX**: Place `.wav` or `.mp3` files in `cleo/audio/` (staged into `cleo/servers/<server_id>/audio/` and `cleo/cleo_audio/` on the client).
 
-The client launcher automatically isolates all server modifications into `modloader/openmp_<server_id>/` and cleanly restores player files on session disconnect.
+The client launcher automatically isolates all server modifications into `modloader/servers/<server_id>/` and `cleo/servers/<server_id>/`, and cleanly restores player files on session disconnect.
 
 ---
 

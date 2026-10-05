@@ -31,10 +31,10 @@ The ModSync server infrastructure integrates a high-throughput .NET 10 CDN serve
    |   open.mp Server    |      |   ModSync Launcher    |      |   GTA San Andreas   |
    |   (omp-server.exe)  |      |   Client (0.4.0-R1)   |      |   Client Directory  |
    |                     |      |                       |      |                     |
-   |   Port: 7777 (UDP)  |      |   1. Query manifest   |      |   modloader/        |
-   |   - CustomModels    |<---->|   2. Verify SHA-256   +----->|     openmp_server/  |
-   |   - LegacyNetwork   |      |   3. Staging / Cache  |      |   cleo/             |
-   |   - Pawn Gamemode   |      |   4. Safe Execution   |      |     servers/        |
+   |   Port: 7777 (UDP)  |      |   1. Query manifest   |      |   stream.ini        |
+   |   - CustomModels    |<---->|   2. Verify SHA-256   +----->|   modloader/servers/|
+   |   - LegacyNetwork   |      |   3. Staging / Cache  |      |   cleo/servers/     |
+   |   - Pawn Gamemode   |      |   4. Safe Execution   |      |   (gta3.img clean)  |
    +---------------------+      +-----------------------+      +---------------------+
 ```
 
@@ -131,15 +131,16 @@ curl -X POST http://localhost:8080/api/refresh
 ModSync gives server owners two powerful techniques to customize visual and functional game elements:
 
 1. **Replacements (`server_mods/<category>/replacements/<mod_name>/`)**:
-   - Replaces vanilla assets in memory dynamically using ModLoader.
-   - Preserves player's base installation on disk.
-   - Retains vehicle handling, weapon damage, and ped animations automatically.
+   - Replaces vanilla assets in memory dynamically using ModLoader without altering client base files.
+   - **Vehicles**: Inherits native handling, wheel suspension, doors, engine sounds, and physics automatically. Server owners can optionally include custom `handling.cfg`, `vehicles.ide`, `carcols.dat`, and `carmods.dat` inside the mod folder to override vehicle performance.
+   - **Weapons**: Replaces 3D model and textures while retaining native fire animations, ammo slots, and reload timings.
    - Example path: `server_mods/vehicles/replacements/hyundai_accent_taxi/emperor.dff`
 2. **Additions / Content Expansion (`server_mods/<category>/additions/<mod_name>/`)**:
-   - Adds brand-new models without replacing vanilla assets.
-   - Handled via open.mp `CustomModels.dll` and configured in `artconfig.txt`.
-   - Skin IDs use range `20000` to `30000`.
-   - Object/prop IDs use base model `19300` and negative new IDs (`-1001`, `-1002`).
+   - Introduces brand-new 3D assets registered via open.mp `CustomModels.dll` and configured in `artconfig.txt`.
+   - **Skins**: Native custom character models using ID range `20000` to `30000` (e.g. `20001` Carabineros GOPE), fully selectable via `SetPlayerSkin()`.
+   - **Objects & Props**: Negative IDs (`-1001`, `-1002`) mapped from base object ID `19300`.
+   - **Weapons**: Custom 3D meshes attached to character bones via `SetPlayerAttachedObject()`.
+   - **Vehicle Models as Objects**: Models registered with `AddSimpleModel` (`-1002 suzuki_spresso`) load as 3D object props (for showroom displays or `AttachObjectToVehicle`), not drivable cars. Drivable cars must use `replacements/`.
 
 Example `artconfig.txt`:
 ```
@@ -153,19 +154,39 @@ AddSimpleModel -1 19300 -1002 suzuki_spresso.dff suzuki_spresso.txd
 
 ---
 
-### B. Vehicles: Replacements & Streaming Memory Budget
+### B. Vehicles: Replacements, Handling & Streaming Memory Budget
 
-#### Directory Structure
+#### Directory Structure with Optional Handling Override
 ```
 server_mods/vehicles/replacements/hyundai_accent_taxi/
 |-- emperor.dff    # 3D vehicle mesh with chassis_dummy hierarchy
-`-- emperor.txd    # Texture dictionary
+|-- emperor.txd    # Texture dictionary
+|-- handling.cfg   # Optional: Custom engine acceleration, braking, center of mass
+`-- vehicles.ide   # Optional: Custom wheel radius and animation flags
 ```
 
-#### Memory Tuning for High-Poly Models
+#### Memory Tuning via `stream.ini` & Large Address Aware (LAA)
 When serving high-polygon vehicle meshes (e.g. 20 MB+ DFF models), the default 32-bit GTA SA streaming budget (128 MB) can cause models to disappear or textures to flicker.
-- ModSync client enforces a **2048 MB streaming memory ceiling** via `modsync_sdk.js` by writing `2047 MB` to memory offset `0x8A5A80`.
-- Client `gta_sa.exe` must have the Large Address Aware (LAA) 4GB patch flag enabled.
+
+ModSync configures `stream.ini` in the GTA root:
+```ini
+memory		2096128
+devkit_memory	2096128
+vehicles	96
+pe_lightchangerate	0.0005
+pe_lightingbasecap	0.35
+pe_lightingbasemult	0.5
+pe_leftx	16
+pe_topy		16
+pe_rightx	16
+pe_bottomy	16
+dontbuildpaths
+```
+
+* **`memory 2096128` (2047 MB in KB)**: Avoids the signed 32-bit integer overflow bug in GTA SA's memory allocator that occurs if set to exactly 2048 MB (`0x80000000` = negative number).
+* **`vehicles 96`**: Boosts the concurrent vehicle streaming pool from 32/48 to 96, eliminating model despawns in crowded multiplayer areas.
+* **Large Address Aware (LAA)**: Expands 32-bit address space to 4 GB on 64-bit Windows. Automated by the ModSync Launcher (`0.4.0-R1`).
+* **Runtime Guard**: `modsync_sdk.js` writes `2047MB` to memory offset `0x8A5A80` and clears `0x8E4CB4` as an auxiliary runtime safeguard.
 
 ---
 
@@ -201,8 +222,16 @@ SetPlayerAttachedObject(
 
 ### D. Custom Audio & Sirens
 
-1. Audio assets placed in `server_mods/cleo/audio/` (such as `siren.wav`) are synchronized directly to `cleo/cleo_audio/` on the client.
-2. CLEO Redux scripts trigger high-fidelity audio streams in real-time:
+ModSync provides two audio pipelines:
+
+1. **open.mp Native HTTP Audio Streaming (Pawn)**:
+   The ModSync CDN hosts audio files over HTTP. Gamemodes stream synchronized 3D directional audio to players:
+   ```pawn
+   PlayAudioStreamForPlayer(playerid, "http://127.0.0.1:8080/api/download/audio_server_sync/siren.wav", x, y, z, 50.0, 1);
+   ```
+
+2. **CLEO Redux Low-Latency Audio**:
+   Audio assets placed in `server_mods/cleo/audio/` (such as `siren.wav`) are synchronized directly to `cleo/servers/<server_id>/audio/` and triggered via CLEO Redux:
 
 ```javascript
 /// <reference path=".config/sa.d.ts" />
